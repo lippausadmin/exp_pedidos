@@ -68,7 +68,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
   console.log('ENTROU')
 
-  if(pedido.vend_cli == 111){
+  if(pedido.vend_cli == 111 || pedido.vend_cli == 161){
     return
   }
   else if(getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1 || pedido.data_entrega == null){
@@ -532,9 +532,16 @@ export async function transmitirPedidos(req: Request, res: Response) {
   const pedidos = await prisma.pedidos_capa.findMany({
     where: {
       transmitido: false,
-      NOT: {
-        vend_cli: 111
-      }
+      // NOT: {
+      //   vend_cli: 111,
+      //   AND:{
+      //     vend_cli: 111,
+      //   }
+      // }
+      AND: [
+        {vend_cli: 111},
+        {vend_cli: 161}
+      ]
     },
     include: {
       itens: true,
