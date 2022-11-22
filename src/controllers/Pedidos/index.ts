@@ -770,19 +770,21 @@ export async function transmitirPedidos(req: Request, res: Response) {
     }
   }
 
-  try{
-    const resposta = promiseReturn.filter( (each: any) => each.boolean == true).map( (pedido) => {
-      return `  &#8226; ${pedido.num_pedido}\n`
-    }).join('\n')
-
-    await bot.telegram.sendMessage(chatId, 
-      `OS PEDIDOS: \n\n${resposta}/nFORAM ENVIADOS COM SUCESSO PELA API`, 
-      {
-        parse_mode: 'HTML'
-      }
-    )
-  } catch(err) {
-    console.log(err)
+  if(promiseReturn.filter( (each: any) => each.boolean == true).length > 0){
+    try{
+      const resposta = promiseReturn.filter( (each: any) => each.boolean == true).map( (pedido) => {
+        return `  &#8226; ${pedido.num_pedido}\n`
+      }).join('\n')
+  
+      await bot.telegram.sendMessage(chatId, 
+        `OS PEDIDOS: \n\n${resposta}\nFORAM ENVIADOS COM SUCESSO PELA API`, 
+        {
+          parse_mode: 'HTML'
+        }
+      )
+    } catch(err) {
+      console.log(err)
+    }
   }
 
   return res.status(200).json({
