@@ -15,8 +15,6 @@ var bot = new Telegraf(botToken)
 
 var chatId = process.env.CHAT_ID ? process.env.CHAT_ID : ''
 
-
-
 function calcularRaio(cliente: any) {
   const { lat_vend, long_vend, lat_cli, long_cli } = cliente;
 
@@ -507,9 +505,7 @@ export async function postPedidosOffline(req: Request, res: Response) {
       }).join('\n')
   
       await bot.telegram.sendMessage(chatId, 
-        `
-          O VENDEDOR ${dataCapa[0].vend_cli} MANDOU OS PEDIDOS: \n${resposta} \nVIA OFFLINE
-        `
+        `O VENDEDOR ${dataCapa[0].vend_cli} MANDOU OS PEDIDOS: \n${resposta} \nVIA OFFLINE`
       )
 
       // acompanhar pedidos piloto ^^^
