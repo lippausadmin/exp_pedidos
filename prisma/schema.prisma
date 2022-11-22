@@ -128,12 +128,13 @@ model fds_grupo {
   nome_fds_grp String @db.VarChar
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
 model fds_grupo_segmento {
   id_fds_grp   Int
   cod_segmento Int
   qtde_sku_min Int
 
-  @@unique([id_fds_grp, cod_segmento, qtde_sku_min], map: "id_fds_grupo_segmento")
+  @@ignore
 }
 
 model fds_segmento_itens {
@@ -272,7 +273,7 @@ model pedidos_capa {
   pedido_fora_rota    Boolean
   motivo_nao_compra   String?         @db.VarChar
   cpf_cnpj_cli        String?         @db.VarChar
-  pedidos_itens       pedidos_itens[]
+  itens               pedidos_itens[]
 }
 
 model pedidos_itens {
@@ -331,6 +332,7 @@ model precos_itens {
   cod_combo      Int   @default(0)
   perc_acrescimo Float @default(10) @db.Real
   num_prioridade Int   @default(9999)
+  cod_emp        Int   @default(1)
 
   @@unique([num_tabela, cod_prod, cod_combo], map: "idx_precos_itens")
 }
@@ -453,4 +455,64 @@ model vendedores {
   mesa_vend  Decimal @db.Decimal(3, 0)
   email_vend String  @db.VarChar(255)
   emp_vend   Int
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model clientes_erp_system_73_90983000739098 {
+  cod_cli      String?   @db.VarChar(9)
+  fantasia_cli String?   @db.VarChar(255)
+  razao_cli    String?   @db.VarChar(255)
+  sup_cli      Int?
+  vend_cli     Decimal?  @db.Decimal(3, 0)
+  pasta_cli    Int?
+  cod_canal    String?   @db.VarChar(255)
+  bairro_cli   String?   @db.VarChar(255)
+  cidade_cli   String?   @db.VarChar(255)
+  merc_cli     String?   @db.VarChar(4)
+  tipo_cli     String?   @db.VarChar(4)
+  tel_cli      Decimal?  @db.Decimal
+  dt_inc_cli   DateTime? @db.Date
+  lat_cli      Float?
+  long_cli     Float?
+  cond_pag     String?   @db.VarChar
+  num_seq      Int?
+  cpf_cnpj_cli String?   @db.VarChar
+  tab_cli      Int?
+
+  @@map("__clientes_erp_system_73_90983000739098")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model historico_erp_system_2_5095992170050443 {
+  data_pedido  DateTime? @db.Date
+  cod_cli      String?   @db.VarChar
+  num_pedido   Decimal?  @db.Decimal
+  cod_prod     Int?
+  volume       Float?    @db.Real
+  receita      Float?    @db.Real
+  mes          String?   @db.VarChar
+  semana       String?   @db.VarChar
+  num_tabela   Int?
+  chave_pedido String?   @db.VarChar
+
+  @@map("__historico_erp_system_2_5095992170050443")
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model historico_erp_system_time_1000 {
+  data_pedido  DateTime? @db.Date
+  cod_cli      String?   @db.VarChar
+  num_pedido   Decimal?  @db.Decimal
+  cod_prod     Int?
+  volume       Float?    @db.Real
+  receita      Float?    @db.Real
+  mes          String?   @db.VarChar
+  semana       String?   @db.VarChar
+  num_tabela   Int?
+  chave_pedido String?   @db.VarChar
+
+  @@map("__historico_erp_system_time_1000")
+  @@ignore
 }

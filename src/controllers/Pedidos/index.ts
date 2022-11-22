@@ -386,7 +386,6 @@ export async function prePedido(req: Request, res: Response) {
 
   const pedido = await prisma.pedidos_capa.create({
     data: {
-      // num_pedido: `${cliente.cod_cli}/${cliente.final_atendimento}`,
       ...data,
       itens: {
         createMany: {
@@ -421,7 +420,7 @@ export async function prePedido(req: Request, res: Response) {
   try{
     if(pedido.motivo_nao_compra == 'Z'){
       await bot.telegram.sendMessage(chatId,
-        `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nDATA: <b>${pedido.final_atendimento.toLocaleString('pt-br')}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item,0))}</b>\n
+        `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString('pt-br')}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item,0))}</b>\n
         `, { parse_mode: 'HTML' }
       )
     }
