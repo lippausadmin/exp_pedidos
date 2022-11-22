@@ -1,5 +1,5 @@
+import * as PedidosControllers from "../controllers/Pedidos"
 import express from "express";
-import * as UserControllers from "../controllers/User"
 
 const routes = express.Router();
 
@@ -9,12 +9,11 @@ const routes = express.Router();
 // PATCH 
 // DELETE
 
-// USERS
+routes.post('/pedido', PedidosControllers.prePedido)
+routes.post('/pedido/offline', PedidosControllers.postPedidosOffline)
+routes.get('/transmitir/pedidos', PedidosControllers.transmitirPedidos)
 
-routes.get("/users", UserControllers.getUser)
-// routes.get("/user/:id", UserControllers.getUser)
-routes.post("/user", UserControllers.createUser)
-routes.patch("/user", UserControllers.login)
-// routes.put("/user/:id", UserControllers.updateUser)
+
+
 
 export default routes;
