@@ -357,66 +357,65 @@ export async function prePedido(req: Request, res: Response) {
 
   let counter = 0;
 
-  const itens = !!carrinho
-    ? carrinho.map((each: any) => {
-        if (each.produtos !== undefined) {
-          return each.produtos.map((produto: CarrinhoProdutoComboProps) => {
-            if (produto.quantidadeAvulsa == null) {
-              produto.quantidadeAvulsa = 0;
-            }
-
-            counter++;
-
-            return {
-              id: `${counter}-${cliente.cod_cli}/${cliente.final_atendimento
-                .replace(/[-:.TZ]/g, "")
-                .substring(0, 12)}`,
-              seq_item: 0,
-              cod_prod: produto.cod_prod,
-              cod_ocorrencia: produto.cod_ocorrencia,
-              qtde_cx: produto.quantidadeCaixa,
-              qtde_unit: produto.quantidadeAvulsa,
-              qtde_prod: produto.qtde_prod,
-              tab_preco_item: produto.num_tabela,
-              preco_item: Number(produto.preco_prod / produto.qtde_prod),
-              valor_total_item:
-                (Number(produto.preco_prod) / Number(produto.qtde_prod)) *
-                  produto.quantidadeAvulsa +
-                Number(produto.preco_prod) * produto.quantidadeCaixa,
-              desconto_preco: 0,
-              cod_combo: produto.cod_combo,
-              desc_combo: produto.desc_combo,
-              tipo_combo: produto.tipo_combo,
-              tabela_promocional: Boolean(produto.tabela_promocional),
-              venda_adicional: Boolean(produto.venda_adicional),
-            };
-          });
-        } else {
-          counter++;
-
-          return {
-            id: `${counter}-${cliente.cod_cli}/${cliente.final_atendimento
-              .replace(/[-:.TZ]/g, "")
-              .substring(0, 12)}`,
-            seq_item: 0,
-            cod_prod: each.cod_prod,
-            cod_ocorrencia: each.cod_ocorrencia,
-            qtde_cx: each.quantidadeCaixa,
-            qtde_unit: each.quantidadeAvulsa,
-            qtde_prod: each.qtde_prod,
-            tab_preco_item: each.num_tabela,
-            preco_item: Number(each.preco_prod / each.qtde_prod),
-            desconto_preco: 0,
-            valor_total_item:
-              (Number(each.preco_prod) / Number(each.qtde_prod)) *
-                each.quantidadeAvulsa +
-              Number(each.preco_prod) * each.quantidadeCaixa,
-            tabela_promocional: Boolean(each.tabela_promocional),
-            venda_adicional: Boolean(each.venda_adicional),
-          };
+  const itens = !!carrinho ? carrinho.map((each: any) => {
+    if (each.produtos !== undefined) {
+      return each.produtos.map((produto: CarrinhoProdutoComboProps) => {
+        if (produto.quantidadeAvulsa == null) {
+          produto.quantidadeAvulsa = 0;
         }
-      })
-    : [];
+
+        counter++;
+
+        return {
+          id: `${counter}-${cliente.cod_cli}/${cliente.final_atendimento
+            .replace(/[-:.TZ]/g, "")
+            .substring(0, 12)}`,
+          seq_item: 0,
+          cod_prod: produto.cod_prod,
+          cod_ocorrencia: produto.cod_ocorrencia,
+          qtde_cx: produto.quantidadeCaixa,
+          qtde_unit: produto.quantidadeAvulsa,
+          qtde_prod: produto.qtde_prod,
+          tab_preco_item: produto.num_tabela,
+          preco_item: Number(produto.preco_prod / produto.qtde_prod),
+          valor_total_item:
+            (Number(produto.preco_prod) / Number(produto.qtde_prod)) *
+              produto.quantidadeAvulsa +
+            Number(produto.preco_prod) * produto.quantidadeCaixa,
+          desconto_preco: 0,
+          cod_combo: produto.cod_combo,
+          desc_combo: produto.desc_combo,
+          tipo_combo: produto.tipo_combo,
+          tabela_promocional: Boolean(produto.tabela_promocional),
+          venda_adicional: Boolean(produto.venda_adicional),
+        };
+      });
+    } else {
+      counter++;
+
+      return {
+        id: `${counter}-${cliente.cod_cli}/${cliente.final_atendimento
+          .replace(/[-:.TZ]/g, "")
+          .substring(0, 12)}`,
+        seq_item: 0,
+        cod_prod: each.cod_prod,
+        cod_ocorrencia: each.cod_ocorrencia,
+        qtde_cx: each.quantidadeCaixa,
+        qtde_unit: each.quantidadeAvulsa,
+        qtde_prod: each.qtde_prod,
+        tab_preco_item: each.num_tabela,
+        preco_item: Number(each.preco_prod / each.qtde_prod),
+        desconto_preco: 0,
+        valor_total_item:
+          (Number(each.preco_prod) / Number(each.qtde_prod)) *
+            each.quantidadeAvulsa +
+          Number(each.preco_prod) * each.quantidadeCaixa,
+        tabela_promocional: Boolean(each.tabela_promocional),
+        venda_adicional: Boolean(each.venda_adicional),
+      };
+    }
+  }) : [];
+
 
   // ITENS DO CARRINHO SÃO PADRONIZADOS PARA O pedidos_itens ^^
 
@@ -470,10 +469,13 @@ export async function prePedido(req: Request, res: Response) {
     } catch (err) {
       console.log(err);
     }
+
     return res
       .status(201)
       .json({ retorno_envio: "Pedido salvo no banco mas não enviado", pedido });
   }
+
+
 
   try {
     if (pedido.motivo_nao_compra == "Z") {
@@ -482,7 +484,7 @@ export async function prePedido(req: Request, res: Response) {
         `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
           pedido.num_pedido
         }</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
-          "pt-br"
+          "pt-br", { timeZone: 'America/Bahia' }
         )}</b>\nVALOR TOTAL: <b>${formatter.format(
           itens.flat().reduce((a, b) => a + b.valor_total_item, 0)
         )}</b>\n
@@ -492,9 +494,7 @@ export async function prePedido(req: Request, res: Response) {
     } else {
       const motivo = await prisma.motivo_nao_compra.findFirst({
         where: {
-          cod_motivo: !!pedido.motivo_nao_compra
-            ? pedido.motivo_nao_compra
-            : "",
+          cod_motivo: !!pedido.motivo_nao_compra ? pedido.motivo_nao_compra : "",
         },
       });
 
