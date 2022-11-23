@@ -70,9 +70,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
   console.log("ENTROU");
 
-  if (pedido.vend_cli == 111 || pedido.vend_cli == 161) {
-    return;
-  } else if (
+  if (
     getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1 ||
     pedido.data_entrega == null
   ) {
@@ -610,23 +608,11 @@ export async function transmitirPedidos(req: Request, res: Response) {
   const pedidos = await prisma.pedidos_capa.findMany({
     where: {
       transmitido: false,
-      NOT: {
-        OR: [
-          {
-            vend_cli: 111,
-          },
-          {
-            vend_cli: 161,
-          },
-        ],
-      }
     },
     include: {
       itens: true,
     },
   });
-
-  return res.json(pedidos)
 
   // PEDIDOS QUE NÃO FORAM TRANSMITIDOS SÃO PEGOS DO BANCO ^^
 
@@ -638,9 +624,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
     pedidos.map(async (pedido) => {
       let { itens } = pedido;
 
-      if (pedido.vend_cli == 111) {
-        return;
-      } else if (
+      if (
         pedido.data_entrega == null ||
         getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1
       ) {
