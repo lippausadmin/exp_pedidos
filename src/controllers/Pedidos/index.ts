@@ -491,7 +491,8 @@ export async function prePedido(req: Request, res: Response) {
         `,
         { parse_mode: "HTML" }
       );
-    } else {
+    } 
+    else {
       const motivo = await prisma.motivo_nao_compra.findFirst({
         where: {
           cod_motivo: !!pedido.motivo_nao_compra ? pedido.motivo_nao_compra : "",
@@ -503,7 +504,7 @@ export async function prePedido(req: Request, res: Response) {
         `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
           pedido.num_pedido
         }</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
-          "pt-br"
+          "pt-br", { timeZone: 'America/Bahia' }
         )}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b>\n`,
         { parse_mode: "HTML" }
       );
