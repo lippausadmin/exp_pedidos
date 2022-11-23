@@ -70,10 +70,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
   console.log("ENTROU");
 
-  if (
-    getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1 ||
-    pedido.data_entrega == null
-  ) {
+  if (getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1 ||pedido.data_entrega == null) {
     console.log("pedido para o próximo dia útil");
 
     // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
@@ -297,16 +294,12 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
         },
         where: {
           num_pedido: {
-            in: promiseReturn
-              .filter((each: any) => each.boolean == true)
-              .map((each: any) => each.num_pedido),
+            in: promiseReturn.filter((each: any) => each.boolean == true).map((each: any) => each.num_pedido),
           },
         },
       });
 
-      if (
-        promiseReturn.filter((each: any) => each.boolean == false).length > 0
-      ) {
+      if (promiseReturn.filter((each: any) => each.boolean == false).length > 0) {
         try {
           const resposta = promiseReturn
             .filter((each: any) => each.boolean == false)
@@ -454,26 +447,26 @@ export async function prePedido(req: Request, res: Response) {
 
   const momento_atual = new Date().toISOString().substring(11, 19);
 
-  if (momento_atual < "10:30:00" || momento_atual > "20:36:00") {
-    // ^^ TEM QUE SOMAR 3 HORAS, ESSE HORÁRIO É O 'GLOBAL'
+  // if (momento_atual < "10:30:00" || momento_atual > "20:36:00") {
+  //   // ^^ TEM QUE SOMAR 3 HORAS, ESSE HORÁRIO É O 'GLOBAL'
 
-    // 7:30 até as 17:36
+  //   // 7:30 até as 17:36
 
-    try {
-      await bot.telegram.sendMessage(
-        chatId,
-        `
-          O VENDEDOR ${pedido.vend_cli} TENTOU MANDAR O PEDIDO ${pedido.num_pedido} E FOI BLOQUEADO PELO HORÁRIO ${momento_atual}
-        `
-      );
-    } catch (err) {
-      console.log(err);
-    }
+  //   try {
+  //     await bot.telegram.sendMessage(
+  //       chatId,
+  //       `
+  //         O VENDEDOR ${pedido.vend_cli} TENTOU MANDAR O PEDIDO ${pedido.num_pedido} E FOI BLOQUEADO PELO HORÁRIO ${momento_atual}
+  //       `
+  //     );
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
 
-    return res
-      .status(201)
-      .json({ retorno_envio: "Pedido salvo no banco mas não enviado", pedido });
-  }
+  //   return res
+  //     .status(201)
+  //     .json({ retorno_envio: "Pedido salvo no banco mas não enviado", pedido });
+  // }
 
 
 
