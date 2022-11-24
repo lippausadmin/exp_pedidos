@@ -618,10 +618,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
     pedidos.map(async (pedido) => {
       let { itens } = pedido;
 
-      if (
-        pedido.data_entrega == null ||
-        getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1
-      ) {
+      if (pedido.data_entrega == null || getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1) {
         console.log("pedido para o próximo dia útil");
 
         // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
@@ -834,14 +831,12 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
           const fetch = await control.post("/sfa/sinaliza/pedido", pedidoBase);
 
-          console.log(fetch.data);
+          // console.log(fetch.data);
 
           promiseReturn.push({
             frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
             num_pedido: pedido.num_pedido,
-            boolean:
-              fetch.data.pedidos[0].retornoTransmissaoWebService ==
-              "Pedido transmitido com sucesso",
+            boolean: fetch.data.pedidos[0].retornoTransmissaoWebService == "Pedido transmitido com sucesso",
           });
         }
       } else {
@@ -857,9 +852,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
     },
     where: {
       num_pedido: {
-        in: promiseReturn
-          .filter((each: any) => each.boolean == true)
-          .map((each: any) => each.num_pedido),
+        in: promiseReturn.filter((each: any) => each.boolean == true).map((each: any) => each.num_pedido),
       },
     },
   });
@@ -885,19 +878,16 @@ export async function transmitirPedidos(req: Request, res: Response) {
     }
   }
 
+  console.log(promiseReturn)
+
   if (promiseReturn.filter((each: any) => each.boolean == true).length > 0) {
     try {
-      const resposta = promiseReturn
-        .filter((each: any) => each.boolean == true)
-        .map((pedido) => {
-          return `  &#8226; ${pedido.num_pedido}\n`;
-        })
-        .join("\n");
+      const resposta = promiseReturn.filter((each: any) => each.boolean == true).map((pedido) => {
+        return `  &#8226; ${pedido.num_pedido}\n`;
+      }).join("\n");
 
-      await bot.telegram.sendMessage(
-        chatId,
-        `OS PEDIDOS: \n\n${resposta}\nFORAM ENVIADOS COM SUCESSO PELA API`,
-        {
+      await bot.telegram.sendMessage(chatId,
+        `OS PEDIDOS: \n\n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\nFORAM ENVIADOS COM SUCESSO PELA API`, {
           parse_mode: "HTML",
         }
       );
@@ -907,9 +897,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
   }
 
   return res.status(200).json({
-    pedidos_enviados: promiseReturn.filter((each: any) => each.boolean == true)
-      .length,
-    pedidos_travados: promiseReturn.filter((each: any) => each.boolean == false)
-      .length,
+    pedidos_enviados: promiseReturn.filter((each: any) => each.boolean == true).length,
+    pedidos_travados: promiseReturn.filter((each: any) => each.boolean == false).length,
   });
 }
