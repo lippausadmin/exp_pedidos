@@ -66,6 +66,12 @@ function getBusinessDatesCount(endDate: any, startDate: any) {
 async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
   const chatId = process.env.CHAT_ID ? process.env.CHAT_ID : "";
 
+  const taxa = await prisma.condicao_pagamento.findFirst({
+    where: {
+      cod_pag: pedido.cod_pag
+    }
+  })
+
   const promiseReturn: any[] = [];
 
   console.log("ENTROU");
@@ -220,7 +226,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
         pedidoRecolhimento: false,
         pedidoTransmitido: true,
         percDesconto: 0,
-        percTaxaFinanc: 0,
+        percTaxaFinanc: !!taxa ? taxa.taxa_adf : 0,
         qtdSatelites: 0,
         qtdeAvulsa: itensBase
           .flat()
@@ -623,6 +629,12 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
         // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
 
+        const taxa = await prisma.condicao_pagamento.findFirst({
+          where: {
+            cod_pag: pedido.cod_pag
+          }
+        })
+
       if (true) {
         const itensBase: any[] = itens.map((produto: any) => {
           return {
@@ -773,7 +785,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
           pedidoRecolhimento: false,
           pedidoTransmitido: true,
           percDesconto: 0,
-          percTaxaFinanc: 0,
+          percTaxaFinanc: !!taxa ? taxa.taxa_adf : 0,
           qtdSatelites: 0,
           qtdeAvulsa: itensBase
             .flat()
