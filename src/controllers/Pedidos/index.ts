@@ -75,7 +75,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
     // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
 
-    if (false) {
+    if (true) {
       const itensBase: any[] = itens.map((produto: EnviarPedidosItensProps) => {
         return {
           acaoQtdAutorizada: 0,
