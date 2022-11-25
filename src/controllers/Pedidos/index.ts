@@ -108,7 +108,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
           itemOrigemAcaoSolavanco: 0,
           itemValidadoBonificaoAutomatica: false,
           numeroCliente: pedido.cod_cli.substring(5, 9),
-          percDesconto: 0,
+          percDesconto: produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? 50 : 0,
           perfilTabela: "",
           permiteAlterarQtdBonificada: false,
           possuiRegraHeishop: false,
@@ -249,8 +249,8 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
         transmitidoFirebase: 3,
         transmitirMobiltec: 1,
         transmitirPortal: 2,
-        urlMobiltec: "",
-        urlPortal: "",
+        urlMobiltec: "http://portal.controlinformatica.com.br/PathTrackerAPI/API/v1/order",
+        urlPortal: "https://lippausdistribuicao.tamosjuntos.com.br/api/sfa/sinaliza",
         valorBonificado: 0,
         valorBruto: itensBase
           .flat()
@@ -281,9 +281,15 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
         valorVerbaUtilizadaGL: 0,
       };
 
+      console.log(pedidoBase)
+
+      console.log('---------------')
+
+      console.log(itensBase)
+
       const fetch = await control.post("/sfa/sinaliza/pedido", pedidoBase);
 
-      console.log(fetch.data);
+      // console.log(fetch.data);
 
       promiseReturn.push({
         frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
@@ -809,8 +815,8 @@ export async function transmitirPedidos(req: Request, res: Response) {
           transmitidoFirebase: 3,
           transmitirMobiltec: 1,
           transmitirPortal: 2,
-          urlMobiltec: "",
-          urlPortal: "",
+          urlMobiltec: "http://portal.controlinformatica.com.br/PathTrackerAPI/API/v1/order",
+          urlPortal: "https://lippausdistribuicao.tamosjuntos.com.br/api/sfa/sinaliza",
           valorBonificado: 0,
           valorBruto: itensBase
             .flat()
