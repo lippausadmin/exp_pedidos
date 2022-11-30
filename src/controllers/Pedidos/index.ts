@@ -12,6 +12,9 @@ import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import control from "../../services/api";
 import { Telegraf } from "telegraf";
+import { groupBy } from "lodash";
+
+
 
 var prisma = new PrismaClient();
 
@@ -72,6 +75,10 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
     }
   })
 
+  const descontoBonificacao = await prisma.precos_erp.findMany()
+
+  const descontoBonificacaoAgrupado = groupBy(descontoBonificacao, ({cod_prod}) => cod_prod)
+
   const promiseReturn: any[] = [];
 
   console.log("ENTROU");
@@ -108,8 +115,10 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
           itemOrigemAcaoSolavanco: 0,
           itemValidadoBonificaoAutomatica: false,
           numeroCliente: pedido.cod_cli.substring(5, 9),
-          percDesconto: produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? 50 : 0,
+
+          percDesconto: produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0,
           perfilTabela: "",
+
           permiteAlterarQtdBonificada: false,
           possuiRegraHeishop: false,
           precoNegociado: false,

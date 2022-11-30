@@ -57,6 +57,7 @@ model clientes_erp {
   cpf_cnpj_cli String   @default(dbgenerated("0")) @db.VarChar
   tab_cli      Int      @default(0)
   endereco_cli String?  @db.VarChar
+  despreza_adf Int      @default(0)
 }
 
 model clientes_geo {
@@ -69,11 +70,12 @@ model clientes_geo {
 }
 
 model combos_capa {
-  cod_combo  Int    @unique(map: "combos_capa_cod_combo_idx")
-  desc_combo String @db.VarChar
-  tipo_combo String @db.VarChar
-  max_venda  Int?
-  seq_combo  Int    @default(9999)
+  cod_combo         Int    @unique(map: "combos_capa_cod_combo_idx")
+  desc_combo        String @db.VarChar
+  tipo_combo        String @db.VarChar
+  max_venda         Int?
+  seq_combo         Int    @default(9999)
+  qtde_minima_total Int?
 }
 
 model combos_itens {
@@ -128,13 +130,12 @@ model fds_grupo {
   nome_fds_grp String @db.VarChar
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
 model fds_grupo_segmento {
   id_fds_grp   Int
   cod_segmento Int
   qtde_sku_min Int
 
-  @@ignore
+  @@unique([id_fds_grp, cod_segmento, qtde_sku_min], map: "idx_fds_grupo_segmento")
 }
 
 model fds_segmento_itens {
@@ -156,6 +157,7 @@ model historico_erp {
   semana       String?  @db.VarChar
   num_tabela   Int
   chave_pedido String   @db.VarChar
+  hecto        Float    @default(0) @db.Real
 
   @@unique([num_pedido, cod_prod, num_tabela, chave_pedido], map: "idx_historico")
 }
@@ -224,6 +226,7 @@ model motivo_nao_compra {
   cod_motivo       String  @unique(map: "motivo_nao_compra_cod_motivo_idx") @db.VarChar
   descricao_motivo String  @db.VarChar(255)
   exibir_motivo    Boolean @default(false)
+  seq_motivo       Int     @default(99)
 }
 
 model ocorrencias {
@@ -239,7 +242,22 @@ model parametros {
   antecipar_rota            Boolean
   exibir_cli_fora_atend     Boolean
   permitir_visita_fora_raio Boolean @default(false)
-  tempo_atendimento         Int?
+  tempo_atendimento         Int     @default(180)
+  perc_visita_fora_raio     Int     @default(10)
+  num_tab_small_adega       Int     @default(61)
+  num_tab_top_adega         Int     @default(62)
+  tempo_voltar_sem_motivar  Int     @default(30)
+  hora_inicial_pedidos      String  @default("10:00:00") @db.VarChar
+  hora_final_pedidos        String  @default("20:36:00") @db.VarChar
+  tabela_erp_sku_ano        String  @default(dbgenerated("2022")) @db.VarChar
+  tabela_erp_sku_versao     String  @default("01") @db.VarChar
+  tabela_erp_sku_num_tab    String  @default("99") @db.VarChar
+  tabela_erp_promo_ano      String  @default("2022") @db.VarChar
+  tabela_erp_promo_versao   String  @default("02") @db.VarChar
+  tabela_erp_promo_num_tab  String  @default("99") @db.VarChar
+  tabela_erp_combo_ano      String  @default("2022") @db.VarChar
+  tabela_erp_combo_versao   String  @default("03") @db.VarChar
+  tabela_erp_combo_num_tab  String  @default("99") @db.VarChar
 
   @@unique([antecipar_rota, exibir_cli_fora_atend, permitir_visita_fora_raio], map: "id_parametros")
 }
@@ -334,7 +352,7 @@ model precos_itens {
   num_prioridade Int   @default(9999)
   cod_emp        Int   @default(1)
 
-  @@unique([num_tabela, cod_prod, cod_combo], map: "idx_precos_itens")
+  @@unique([num_tabela, cod_prod, cod_combo, cod_emp], map: "idx_precos_itens")
 }
 
 model precos_pasta {
@@ -366,6 +384,7 @@ model produtos {
   descricao_curta_prod String? @db.VarChar
   permitir_venda_un    Boolean @default(false)
   qtde_min_un          Int?
+  aplica_desconto_cnpj Boolean @default(false)
   marcas               marcas  @relation(fields: [cod_marca], references: [cod_marca])
 }
 
@@ -457,62 +476,230 @@ model vendedores {
   emp_vend   Int
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model clientes_erp_system_73_90983000739098 {
-  cod_cli      String?   @db.VarChar(9)
-  fantasia_cli String?   @db.VarChar(255)
-  razao_cli    String?   @db.VarChar(255)
-  sup_cli      Int?
-  vend_cli     Decimal?  @db.Decimal(3, 0)
-  pasta_cli    Int?
-  cod_canal    String?   @db.VarChar(255)
-  bairro_cli   String?   @db.VarChar(255)
-  cidade_cli   String?   @db.VarChar(255)
-  merc_cli     String?   @db.VarChar(4)
-  tipo_cli     String?   @db.VarChar(4)
-  tel_cli      Decimal?  @db.Decimal
-  dt_inc_cli   DateTime? @db.Date
-  lat_cli      Float?
-  long_cli     Float?
-  cond_pag     String?   @db.VarChar
-  num_seq      Int?
-  cpf_cnpj_cli String?   @db.VarChar
-  tab_cli      Int?
-
-  @@map("__clientes_erp_system_73_90983000739098")
-  @@ignore
+model precos_erp {
+  cod_prod Int   @id
+  preco_cx Float @db.Real
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model historico_erp_system_2_5095992170050443 {
-  data_pedido  DateTime? @db.Date
-  cod_cli      String?   @db.VarChar
-  num_pedido   Decimal?  @db.Decimal
-  cod_prod     Int?
-  volume       Float?    @db.Real
-  receita      Float?    @db.Real
-  mes          String?   @db.VarChar
-  semana       String?   @db.VarChar
-  num_tabela   Int?
-  chave_pedido String?   @db.VarChar
-
-  @@map("__historico_erp_system_2_5095992170050443")
-  @@ignore
+model vw_tarefas_por_vendedores {
+  cod_cli           String   @db.VarChar
+  data_prazo_tarefa DateTime @db.Date
+  id_acao           Int
+  vend_cli          Decimal  @db.Decimal(3, 0)
+  nome_vend         String   @db.VarChar(255)
+  fantasia_cli      String
+  @@unique([cod_cli, data_prazo_tarefa, id_acao], map: "id")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model historico_erp_system_time_1000 {
-  data_pedido  DateTime? @db.Date
-  cod_cli      String?   @db.VarChar
-  num_pedido   Decimal?  @db.Decimal
-  cod_prod     Int?
-  volume       Float?    @db.Real
-  receita      Float?    @db.Real
-  mes          String?   @db.VarChar
-  semana       String?   @db.VarChar
-  num_tabela   Int?
-  chave_pedido String?   @db.VarChar
+model vw_historico_erp_2022 {
+  data_pedido DateTime @db.Date
+  cod_cli     String   @db.VarChar
+  num_pedido  Decimal  @db.Decimal
+  volume      Float    @db.Real
+  receita     Float    @db.Real
+  cod_prod    Int
+  vend_cli    Int?
+  @@unique([data_pedido, cod_cli, num_pedido], map: "vw_historico_erp_data_pedido_cod_cli_num_pedido_cod_prod_idx")
+}
 
-  @@map("__historico_erp_system_time_1000")
-  @@ignore
+model vw_sequencia_visita_cliente {
+  cod_cli                   String    @unique(map: "clientes_erp_cod_cli_idxx") @db.VarChar(9)
+  fantasia_cli              String    @db.VarChar(255)
+  razao_cli                 String    @db.VarChar(255)
+  sup_cli                   Int
+  vend_cli                  Decimal   @db.Decimal(3, 0)
+  pasta_cli                 Int
+  cod_canal                 String    @db.VarChar(255)
+  bairro_cli                String    @db.VarChar(255)
+  cidade_cli                String    @db.VarChar(255)
+  merc_cli                  String    @db.VarChar(4)
+  tipo_cli                  String    @db.VarChar(4)
+  tel_cli                   Decimal   @db.Decimal(11, 0)
+  dt_inc_cli                DateTime  @db.Date
+  lat_cli                   Float
+  long_cli                  Float
+  cond_pag                  String    @db.VarChar
+  limite_credito_disponivel Float     @default(5000) @db.Real
+  num_seq_qz1               Int
+  num_seq_qz2               Int
+  devendo                   Boolean   @default(false)
+  ultimo_pedido             DateTime? @db.Date
+  // vendedores                vendedores @relation(fields: [vend_cli], references: [cod_vend])
+}
+
+model vw_segmentos_fds_cliente {
+  cod_cli       String @db.VarChar
+  id_fds_grp    Int
+  cod_segmento  Int
+  nome_segmento String @db.VarChar
+  @@unique([cod_cli, id_fds_grp, cod_segmento], map: "id_vw_fds_segmentos_clientes")
+}
+
+model vw_produtos_segmentos {
+  cod_prod       Int
+  descricao_prod String @db.VarChar
+  cod_segmento   Int
+  id_fds_grp     Int
+  @@unique([cod_prod, descricao_prod, cod_segmento, id_fds_grp], map: "id_vw_produtos_segmentos")
+}
+
+model vw_dados_home_clientes {
+  cod_cli       String    @unique(map: "vw_dados_home_clientes_cod_cli_idxx") @db.VarChar(9)
+  fantasia_cli  String    @db.VarChar(255)
+  razao_cli     String    @db.VarChar(255)
+  sup_cli       Int
+  vend_cli      Decimal   @db.Decimal(3, 0)
+  pasta_cli     Int
+  cod_canal     String    @db.VarChar(255)
+  bairro_cli    String    @db.VarChar(255)
+  cidade_cli    String    @db.VarChar(255)
+  merc_cli      String    @db.VarChar(4)
+  tipo_cli      String    @db.VarChar(4)
+  tel_cli       Decimal   @db.Decimal(11, 0)
+  dt_inc_cli    DateTime  @db.Date
+  lat_cli       Float
+  long_cli      Float
+  cond_pag      String    @db.VarChar
+  num_seq_qz1   Int
+  num_seq_qz2   Int
+  matriz_cli    String?   @db.VarChar
+  desc_canal    String?
+  devendo       Boolean   @default(false)
+  ultimo_pedido DateTime? @db.Date
+  endereco_cli  String?   @db.VarChar
+  cpf_cnpj_cli  String?
+  despreza_adf  Int       @default(0)
+  tab_cli       Int
+  @@unique([cod_cli, fantasia_cli, matriz_cli, cond_pag, tel_cli], map: "id_vw_dados_home_clientes")
+}
+
+model vw_tabela_preco {
+  num_tabela         Int
+  cod_prod           Int       @id
+  descricao_tabela   String
+  data_ini_vig       DateTime?
+  data_fin_vig       DateTime?
+  data_ent_futura    DateTime?
+  venda_adicional    Boolean
+  preco_prod         Float     @db.Real
+  desc_max           Float     @db.Real
+  cod_combo          Int?
+  tabela_promocional Boolean   @default(false)
+  max_venda          Int?
+  perc_acrescimo     Float     @default(10)
+  num_prioridade     Int       @default(9999)
+  cod_emp            Int
+  @@unique([cod_prod, descricao_tabela, data_ini_vig, data_fin_vig, preco_prod, desc_max, data_ent_futura, venda_adicional, cod_combo, cod_emp], map: "id_vw_tabela_preco")
+}
+
+model vw_carga_vendedor {
+  cod_cli     String
+  vend_cli    Int
+  cod_prod    Int
+  mes         String
+  semana      String
+  receita     Float
+  volume      Float
+  data_pedido DateTime
+  @@unique([cod_cli, cod_prod, mes, semana, receita, volume], map: "id_vw_carga_vendedor")
+}
+
+model vw_carga_vendedor_agrupada {
+  cod_cli  String
+  vend_cli Int
+  mes      String
+  semana   String
+  receita  Float
+  volume   Float
+  @@unique([cod_cli, mes, semana, receita, volume], map: "id_vw_carga_vendedor_agrupada")
+}
+
+model vw_combos {
+  cod_prod          Int
+  num_tabela        Int
+  cod_combo         Int
+  desc_combo        String
+  tipo_combo        String
+  qtde_cx           Int
+  qtde_un           Int
+  prod_variavel     Boolean
+  cod_ocorrencia    Int
+  cod_motivo_bon    Int
+  preco_prod        Float
+  desc_max          Float
+  cod_fam           String
+  descricao_prod    String
+  cod_marca         Int
+  cod_categoria     Int
+  cod_segmento      Int
+  cod_linha         Int
+  cod_tipo          Int
+  qtde_prod         Int
+  cod_embalagem     Int
+  status_prod       Boolean
+  max_venda         Int?
+  seq_combo         Int     @default(9999)
+  cod_emp           Int
+  qtde_minima_total Int?
+  @@unique([cod_prod, cod_combo, cod_ocorrencia, cod_emp], map: "id_vw_combos")
+}
+
+model vw_info_tarefas {
+  cod_cli              String    @db.VarChar(255)
+  fantasia_cli         String    @db.VarChar(255)
+  vend_cli             Decimal   @db.Decimal(3, 0)
+  data_prazo_tarefa    DateTime  @db.Date
+  data_exec_tarefa     DateTime? @db.Date
+  encerra_auto_tarefa  Boolean
+  observacao_tarefa    String?   @db.VarChar(255)
+  opcao_lista_tarefa   Int?
+  email_respon_tarefa  String    @db.VarChar(255)
+  situacao_tarefa      Int
+  valida_tarefa        Boolean
+  anexo_tarefa         Boolean
+  id_acao              Int
+  id_lista_capa        Int
+  validacao_tarefa     Boolean
+  email_criador_tarefa String    @db.VarChar(255)
+  data_criacao_tarefa  DateTime  @db.Date
+  descricao_acao       String    @db.VarChar(255)
+  sup_cli              Int
+  @@unique([cod_cli, data_criacao_tarefa, id_acao], map: "id_vw_info_tarefas")
+}
+
+model vm_top_vendas {
+  cod_prod  Int
+  cod_canal String
+  volume    Float
+  @@unique([cod_prod, cod_canal], map: "id_vm_top_vendas")
+}
+
+model vw_historico_combos {
+  vend_cli     Int
+  data_pedido  DateTime
+  cod_cli      String
+  num_pedido   Int
+  cod_prod     Int
+  volume       Float
+  receita      Float
+  mes          String
+  semana       String
+  num_tabela   Int
+  chave_pedido String
+  @@unique([chave_pedido, cod_prod, num_tabela], map: "id_vw_historico_combos")
+}
+
+model vw_historico_promocoes {
+  vend_cli     Int
+  data_pedido  DateTime
+  cod_cli      String
+  num_pedido   Int
+  cod_prod     Int
+  volume       Float
+  receita      Float
+  mes          String
+  semana       String
+  num_tabela   Int
+  chave_pedido String
+  @@unique([chave_pedido, cod_prod, num_tabela], map: "id_vw_historico_promocoes")
 }
