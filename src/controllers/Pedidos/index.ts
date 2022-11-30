@@ -513,13 +513,11 @@ export async function prePedido(req: Request, res: Response) {
         },
       });
 
-      await bot.telegram.sendMessage(
-        chatId,
-        `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
+      await bot.telegram.sendMessage( chatId,`VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
           pedido.num_pedido
         }</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
           "pt-br", { timeZone: 'America/Bahia' }
-        )}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b>\n`,
+        )}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
         { parse_mode: "HTML" }
       );
     }
