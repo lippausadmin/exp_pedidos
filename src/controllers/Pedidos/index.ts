@@ -116,7 +116,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
           itemValidadoBonificaoAutomatica: false,
           numeroCliente: pedido.cod_cli.substring(5, 9),
 
-          percDesconto: produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0,
+          percDesconto: produto.qtde_cx >= 1 ? produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0 : (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100,
           perfilTabela: "",
 
           permiteAlterarQtdBonificada: false,
@@ -648,6 +648,10 @@ export async function transmitirPedidos(req: Request, res: Response) {
           }
         })
 
+        const descontoBonificacao = await prisma.precos_erp.findMany()
+
+        const descontoBonificacaoAgrupado = groupBy(descontoBonificacao, ({cod_prod}) => cod_prod)
+      
       if (true) {
         const itensBase: any[] = itens.map((produto: any) => {
           return {
@@ -677,7 +681,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
             itemOrigemAcaoSolavanco: 0,
             itemValidadoBonificaoAutomatica: false,
             numeroCliente: pedido.cod_cli.substring(5, 9),
-            percDesconto: 0,
+            percDesconto: produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0.01,
             perfilTabela: "",
             permiteAlterarQtdBonificada: false,
             possuiRegraHeishop: false,
