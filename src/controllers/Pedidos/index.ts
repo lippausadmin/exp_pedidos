@@ -290,11 +290,11 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
         valorVerbaUtilizadaGL: 0,
       };
 
-      console.log(pedidoBase)
+      // console.log(pedidoBase)
 
-      console.log('---------------')
+      // console.log('---------------')
 
-      console.log(itensBase)
+      // console.log(itensBase)
 
       const fetch = await control.post("/sfa/sinaliza/pedido", pedidoBase);
 
@@ -303,9 +303,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
       promiseReturn.push({
         frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
         num_pedido: pedido.num_pedido,
-        boolean:
-          fetch.data.pedidos[0].retornoTransmissaoWebService ==
-          "Pedido transmitido com sucesso",
+        boolean: fetch.data.pedidos[0].retornoTransmissaoWebService =="Pedido transmitido com sucesso",
       });
 
       const updatePedido = await prisma.pedidos_capa.updateMany({
@@ -322,24 +320,15 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
       if (promiseReturn.filter((each: any) => each.boolean == false).length > 0) {
         try {
-          const resposta = promiseReturn
-            .filter((each: any) => each.boolean == false)
-            .map((pedido) => {
+          const resposta = promiseReturn.filter((each: any) => each.boolean == false).map((pedido) => {
               return `NUM_PEDIDO: ${pedido.num_pedido} \nMOTIVO: ${pedido.frase}\n`;
-            })
-            .join("\n");
+            }).join("\n");
 
-          await bot.telegram.sendMessage(
-            chatId,
-            `
-              PEDIDOS NÃO ENVIADOS: \n\n${resposta}
-            `
-          );
+          await bot.telegram.sendMessage(chatId, `PEDIDOS NÃO ENVIADOS: \n\n${resposta}`);
         } catch (err) {
           console.log(err);
         }
       }
-
       // BOT ^^^^
     }
   } else {
@@ -348,6 +337,12 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
   return { promiseReturn, pedido };
 }
+
+
+
+                  // UTILS ^^^^^^^^^^^^^^^^^^^^    ROTAS DA API \/\/\/\/\/\/\/\/\/\/\/\/\/           
+
+
 
 export async function prePedido(req: Request, res: Response) {
   const chatId = process.env.CHAT_ID ? process.env.CHAT_ID : "";
@@ -430,7 +425,6 @@ export async function prePedido(req: Request, res: Response) {
     }
   }) : [];
 
-
   // ITENS DO CARRINHO SÃO PADRONIZADOS PARA O pedidos_itens ^^
 
   const data = {
@@ -489,8 +483,6 @@ export async function prePedido(req: Request, res: Response) {
   //     .json({ retorno_envio: "Pedido salvo no banco mas não enviado", pedido });
   // }
 
-
-
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
@@ -521,7 +513,8 @@ export async function prePedido(req: Request, res: Response) {
         { parse_mode: "HTML" }
       );
     }
-  } catch (err) {
+  } 
+  catch (err) {
     console.log(err);
   }
 
