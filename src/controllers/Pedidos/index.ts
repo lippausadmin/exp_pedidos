@@ -331,6 +331,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
       }
       // BOT ^^^^
     }
+
   } else {
     console.log("entrega futura, só salva no banco e envia dps");
   }
@@ -483,18 +484,16 @@ export async function prePedido(req: Request, res: Response) {
   //     .json({ retorno_envio: "Pedido salvo no banco mas não enviado", pedido });
   // }
 
+  const canal = await prisma.canal_venda.findFirst({
+    where: {
+      cod_canal: cliente.cod_canal
+    }
+  })
+
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
-        chatId,
-        `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
-          pedido.num_pedido
-        }</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
-          "pt-br", { timeZone: 'America/Bahia' }
-        )}</b>\nVALOR TOTAL: <b>${formatter.format(
-          itens.flat().reduce((a, b) => a + b.valor_total_item, 0)
-        )}</b>\n
-        `,
+        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b>\n`,
         { parse_mode: "HTML" }
       );
     } 
@@ -507,7 +506,7 @@ export async function prePedido(req: Request, res: Response) {
 
       await bot.telegram.sendMessage( chatId,`VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
           pedido.num_pedido
-        }</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
+        }</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
           "pt-br", { timeZone: 'America/Bahia' }
         )}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
         { parse_mode: "HTML" }
