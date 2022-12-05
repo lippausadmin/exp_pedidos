@@ -504,11 +504,11 @@ export async function prePedido(req: Request, res: Response) {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
         chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
-          return `  &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.padEnd(28, ' ') : produtosAgrupado[item.cod_prod][0].descricao_prod.padEnd(28, ' ')}-   CX: ${item.qtde_cx} UN: ${item.qtde_unit}   -   ${formatter.format(item.valor_total_item)}`
+          return `  &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.padEnd(20, ' ') : produtosAgrupado[item.cod_prod][0].descricao_prod.padEnd(22, ' ')}-   CX: ${item.qtde_cx} UN: ${item.qtde_unit}   -   ${formatter.format(item.valor_total_item)}`
         }).join('\n')}`,
         { parse_mode: "HTML" }
       );
-    } 
+    }   
     else {
       const motivo = await prisma.motivo_nao_compra.findFirst({
         where: {
