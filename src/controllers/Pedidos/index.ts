@@ -490,10 +490,22 @@ export async function prePedido(req: Request, res: Response) {
     }
   })
 
+  const produtos = await prisma.produtos.findMany({
+    select: {
+      cod_prod: true,
+      descricao_prod: true,
+      descricao_curta_prod: true
+    }
+  })
+
+  const produtosAgrupado = groupBy(produtos, ({cod_prod}) => cod_prod)
+
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
-        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b>\n`,
+        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
+          return `  &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? produtosAgrupado[item.cod_prod][0].descricao_curta_prod : produtosAgrupado[item.cod_prod][0].descricao_prod}   -   ${item}   -   ${formatter.format(item.valor_total_item)}`
+        }).join('\n')}}`,
         { parse_mode: "HTML" }
       );
     } 
@@ -504,11 +516,7 @@ export async function prePedido(req: Request, res: Response) {
         },
       });
 
-      await bot.telegram.sendMessage( chatId,`VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${
-          pedido.num_pedido
-        }</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString(
-          "pt-br", { timeZone: 'America/Bahia' }
-        )}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
+      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
         { parse_mode: "HTML" }
       );
     }
