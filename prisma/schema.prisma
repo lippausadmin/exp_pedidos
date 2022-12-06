@@ -277,7 +277,7 @@ model pedidos_capa {
   num_ped_ctrl        Int?
   data_emissao        DateTime        @db.Date
   cod_cli             String          @db.VarChar
-  cod_pag             String          @db.VarChar
+  cod_pag             String?         @db.VarChar
   vend_cli            Int
   inicio_atendimento  String          @db.VarChar
   final_atendimento   String          @db.VarChar
