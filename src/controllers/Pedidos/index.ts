@@ -584,14 +584,11 @@ export async function postPedidosOffline(req: Request, res: Response) {
 
   if (dataCapa.length > 0) {
     try {
-      const resposta = dataCapa
-        .map((pedido) => {
+      const resposta = dataCapa.map((pedido) => {
           return `${pedido.num_pedido}`;
-        })
-        .join("\n");
+        }).join("\n");
 
-      await bot.telegram.sendMessage(
-        chatId,
+      await bot.telegram.sendMessage(chatId,
         `O VENDEDOR ${dataCapa[0].vend_cli} MANDOU OS PEDIDOS: \n${resposta} \nVIA OFFLINE`
       );
 
@@ -911,11 +908,11 @@ export async function transmitirPedidos(req: Request, res: Response) {
   if (promiseReturn.filter((each: any) => each.boolean == true).length > 0) {
     try {
       const resposta = promiseReturn.filter((each: any) => each.boolean == true).map((pedido) => {
-        return `  &#8226; ${pedido.num_pedido}\n`;
+        return `  &#8226; ${pedido.num_pedido}`;
       }).join("\n");
 
       await bot.telegram.sendMessage(chatId,
-        `OS PEDIDOS: \n\n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\nFORAM ENVIADOS COM SUCESSO PELA API`, {
+        `OS PEDIDOS: \n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\nFORAM ENVIADOS COM SUCESSO PELA API`, {
           parse_mode: "HTML",
         }
       );
