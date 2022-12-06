@@ -501,7 +501,7 @@ export async function prePedido(req: Request, res: Response) {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
         chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
-          return `<pre>  &#8226;  ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()}   -   CX: ${item.qtde_cx} UN: ${item.qtde_unit}   -   ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)}</pre>`
+          return `<pre> &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()}   -   CX: ${padEnd(item.qtde_cx, 2)} UN: ${padEnd(item.qtde_unit, 2)}   -   ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)}</pre>`
         }).join('\n')}`,
         { parse_mode: "HTML" }
       );
@@ -639,7 +639,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
   
           const taxa: any = await prisma.condicao_pagamento.findFirst({
             where: {
-              cod_pag: pedido.cod_pag
+              cod_pag: !!pedido.cod_pag ? pedido.cod_pag : ''
             }
           })
   
@@ -728,12 +728,12 @@ export async function transmitirPedidos(req: Request, res: Response) {
             // chaveMobiltec: "2016-00000111-20221015175714620",
             codigoCliente: pedido.cod_cli.replace("-", ""), // string sem ' - '
             // codigoCliente: "00019812", ^^
-            codigoCondicaoPagamento: pedido.cod_pag.substring(2, 4), // string
+            codigoCondicaoPagamento: !!pedido.cod_pag ? pedido.cod_pag.substring(2, 4) : null, // string
             // codigoCondicaoPagamento: "77", ^^
             codigoErpTerceiro: "",
             codigoMotivoNaoCompra:
               pedido.motivo_nao_compra == "Z" ? "S" : pedido.motivo_nao_compra,
-            codigoTipoCobranca: pedido.cod_pag.substring(0, 1),
+            codigoTipoCobranca: !!pedido.cod_pag ? pedido.cod_pag.substring(0, 1) : null,
             codigoVendedor: pedido.vend_cli.toString().padStart(8, "0"), // string 8 length
             // codigoVendedor: "00000111", ^^
             coordGpsForaArea: false,
