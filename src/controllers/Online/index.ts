@@ -24,11 +24,11 @@ export async function atulizarVendedoresOnline(req: Request, res: Response) {
 
   try{
     await bot.telegram.editMessageText(chatId, message_id, undefined,
-      `<pre>                     MATRIZ               </pre>
+      `<pre>                       MATRIZ       </pre>
       ${vendedores.filter(({cod_vend}) => Number(cod_vend) <= 300).map((each) => {
         return `<pre> &#8226; ${each.cod_vend} - ${each.nome_vend.padEnd(20, ' ')} - ${each.ultimo_log !== null ? new Date(each.ultimo_log).toLocaleString("pt-br", { timeZone: 'America/Bahia' }) : '         ❌'}</pre>`
       }).join('\n')}
-      <pre>                     FILIAL               </pre>
+      <pre>                        FILIAL         </pre>
       ${vendedores.filter(({cod_vend}) => Number(cod_vend) >= 300).map((each) => {
         return `<pre> &#8226; ${each.cod_vend} - ${each.nome_vend.padEnd(20, ' ')} - ${each.ultimo_log !== null ? new Date(each.ultimo_log).toLocaleString("pt-br", { timeZone: 'America/Bahia' }) : '         ❌'}</pre>`
       }).join('\n')}
