@@ -17,6 +17,7 @@ routes.post('/pedido/offline', atualizarLog, PedidosControllers.postPedidosOffli
 routes.get('/transmitir/pedidos', PedidosControllers.transmitirPedidos)
 
 routes.get('/vendedores/online', OnlineControllers.atulizarVendedoresOnline)
+routes.get('/vendedores/limpar', OnlineControllers.limparLogs)
 
 
 export default routes;

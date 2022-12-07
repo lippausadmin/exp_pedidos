@@ -43,3 +43,14 @@ export async function atulizarVendedoresOnline(req: Request, res: Response) {
 
   return res.json('vendedores')
 }
+
+export async function limparLogs(req: Request, res: Response) {
+
+  const vendedores = await prisma.vendedores.updateMany({
+    data: {
+      ultimo_log: null
+    }
+  })
+
+  return res.json(vendedores)
+}
