@@ -474,6 +474,7 @@ model vendedores {
   mesa_vend  Decimal @db.Decimal(3, 0)
   email_vend String  @db.VarChar(255)
   emp_vend   Int
+  ultimo_log String?
 }
 
 model precos_erp {
@@ -488,6 +489,7 @@ model vw_tarefas_por_vendedores {
   vend_cli          Decimal  @db.Decimal(3, 0)
   nome_vend         String   @db.VarChar(255)
   fantasia_cli      String
+
   @@unique([cod_cli, data_prazo_tarefa, id_acao], map: "id")
 }
 
@@ -499,6 +501,7 @@ model vw_historico_erp_2022 {
   receita     Float    @db.Real
   cod_prod    Int
   vend_cli    Int?
+
   @@unique([data_pedido, cod_cli, num_pedido], map: "vw_historico_erp_data_pedido_cod_cli_num_pedido_cod_prod_idx")
 }
 
@@ -532,6 +535,7 @@ model vw_segmentos_fds_cliente {
   id_fds_grp    Int
   cod_segmento  Int
   nome_segmento String @db.VarChar
+
   @@unique([cod_cli, id_fds_grp, cod_segmento], map: "id_vw_fds_segmentos_clientes")
 }
 
@@ -540,6 +544,7 @@ model vw_produtos_segmentos {
   descricao_prod String @db.VarChar
   cod_segmento   Int
   id_fds_grp     Int
+
   @@unique([cod_prod, descricao_prod, cod_segmento, id_fds_grp], map: "id_vw_produtos_segmentos")
 }
 
@@ -570,6 +575,7 @@ model vw_dados_home_clientes {
   cpf_cnpj_cli  String?
   despreza_adf  Int       @default(0)
   tab_cli       Int
+
   @@unique([cod_cli, fantasia_cli, matriz_cli, cond_pag, tel_cli], map: "id_vw_dados_home_clientes")
 }
 
@@ -589,6 +595,7 @@ model vw_tabela_preco {
   perc_acrescimo     Float     @default(10)
   num_prioridade     Int       @default(9999)
   cod_emp            Int
+
   @@unique([cod_prod, descricao_tabela, data_ini_vig, data_fin_vig, preco_prod, desc_max, data_ent_futura, venda_adicional, cod_combo, cod_emp], map: "id_vw_tabela_preco")
 }
 
@@ -601,6 +608,7 @@ model vw_carga_vendedor {
   receita     Float
   volume      Float
   data_pedido DateTime
+
   @@unique([cod_cli, cod_prod, mes, semana, receita, volume], map: "id_vw_carga_vendedor")
 }
 
@@ -611,6 +619,7 @@ model vw_carga_vendedor_agrupada {
   semana   String
   receita  Float
   volume   Float
+
   @@unique([cod_cli, mes, semana, receita, volume], map: "id_vw_carga_vendedor_agrupada")
 }
 
@@ -641,6 +650,7 @@ model vw_combos {
   seq_combo         Int     @default(9999)
   cod_emp           Int
   qtde_minima_total Int?
+
   @@unique([cod_prod, cod_combo, cod_ocorrencia, cod_emp], map: "id_vw_combos")
 }
 
@@ -664,6 +674,7 @@ model vw_info_tarefas {
   data_criacao_tarefa  DateTime  @db.Date
   descricao_acao       String    @db.VarChar(255)
   sup_cli              Int
+
   @@unique([cod_cli, data_criacao_tarefa, id_acao], map: "id_vw_info_tarefas")
 }
 
@@ -671,6 +682,7 @@ model vm_top_vendas {
   cod_prod  Int
   cod_canal String
   volume    Float
+
   @@unique([cod_prod, cod_canal], map: "id_vm_top_vendas")
 }
 
@@ -686,6 +698,7 @@ model vw_historico_combos {
   semana       String
   num_tabela   Int
   chave_pedido String
+
   @@unique([chave_pedido, cod_prod, num_tabela], map: "id_vw_historico_combos")
 }
 
@@ -701,5 +714,6 @@ model vw_historico_promocoes {
   semana       String
   num_tabela   Int
   chave_pedido String
+
   @@unique([chave_pedido, cod_prod, num_tabela], map: "id_vw_historico_promocoes")
 }
