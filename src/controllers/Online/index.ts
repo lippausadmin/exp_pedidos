@@ -16,7 +16,11 @@ var bot = new Telegraf(botToken);
 
 export async function atulizarVendedoresOnline(req: Request, res: Response) {
 
-  const vendedores = await prisma.vendedores.findMany()
+  const vendedores = await prisma.vendedores.findMany({
+    orderBy: {
+      cod_vend: 'asc'
+    }
+  })
 
   await bot.telegram.editMessageText(chatId, message_id, undefined,
     `<pre>                     MATRIZ               </pre>
@@ -25,7 +29,7 @@ export async function atulizarVendedoresOnline(req: Request, res: Response) {
     }).join('\n')}
     <pre>                     FILIAL               </pre>
     ${vendedores.filter(({cod_vend}) => Number(cod_vend) >= 300).map((each) => {
-      return `<pre> &#8226; ${each.cod_vend} - ${each.nome_vend.padEnd(20, ' ')} - ${each.ultimo_log !== null ? new Date(each.ultimo_log).toLocaleString("pt-br", { timeZone: 'America/Bahia' }) : '       ❌       '}</pre>`
+      return `<pre> &#8226; ${each.cod_vend} - ${each.nome_vend.padEnd(20, ' ')} - ${each.ultimo_log !== null ? new Date(each.ultimo_log).toLocaleString("pt-br", { timeZone: 'America/Bahia' }).padStart(5, ' ') : '       ❌       '}</pre>`
     }).join('\n')}
     `
    , { parse_mode: 'HTML' })
