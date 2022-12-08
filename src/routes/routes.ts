@@ -1,6 +1,5 @@
 import * as PedidosControllers from "../controllers/Pedidos"
 import * as OnlineControllers from "../controllers/Online"
-import { Request, Response } from "express"
 import express from "express";
 import { atualizarLog } from "../middleware/Atualizar Log";
 
@@ -18,6 +17,8 @@ routes.get('/transmitir/pedidos', PedidosControllers.transmitirPedidos)
 
 routes.get('/vendedores/online', OnlineControllers.atulizarVendedoresOnline)
 routes.get('/vendedores/limpar', OnlineControllers.limparLogs)
+routes.get('/log', OnlineControllers.postLogs)
+
 
 
 export default routes;

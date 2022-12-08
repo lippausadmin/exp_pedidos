@@ -54,3 +54,47 @@ export async function limparLogs(req: Request, res: Response) {
 
   return res.json(vendedores)
 }
+
+export async function postLogs(req: Request, res: Response) {
+
+  const { vend_cli } = req.query
+
+  try{
+    const log = await prisma.vendedores.findUnique({
+      where: {
+        cod_vend: !!vend_cli ? Number(vend_cli) : undefined
+      },
+      select: {
+        primeiro_log: true
+      }
+    })
+  
+    if(log !== null){
+      await prisma.vendedores.update({
+        where: {
+          cod_vend: !!vend_cli ? Number(vend_cli) : undefined
+        },
+        data: {
+          ultimo_log: new Date().toISOString()
+        }
+      })
+  
+      return res.json('ultimo log')
+    }
+  
+    await prisma.vendedores.update({
+      where: {
+        cod_vend: !!vend_cli ? Number(vend_cli) : undefined
+      },
+      data: {
+        primeiro_log: new Date().toISOString()
+      }
+    })
+  
+    return res.json('primeiro log')
+  }
+  catch(err){}
+
+  return res.json('deu erro, mas passa')
+
+}

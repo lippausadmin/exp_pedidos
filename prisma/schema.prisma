@@ -469,12 +469,13 @@ model usuarios {
 }
 
 model vendedores {
-  cod_vend   Decimal @id @unique(map: "vendedores_cod_vend_idx") @db.Decimal(3, 0)
-  nome_vend  String  @db.VarChar(255)
-  mesa_vend  Decimal @db.Decimal(3, 0)
-  email_vend String  @db.VarChar(255)
-  emp_vend   Int
-  ultimo_log String?
+  cod_vend     Decimal @id @unique(map: "vendedores_cod_vend_idx") @db.Decimal(3, 0)
+  nome_vend    String  @db.VarChar(255)
+  mesa_vend    Decimal @db.Decimal(3, 0)
+  email_vend   String  @db.VarChar(255)
+  emp_vend     Int
+  ultimo_log   String?
+  primeiro_log String?
 }
 
 model precos_erp {
