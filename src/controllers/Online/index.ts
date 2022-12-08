@@ -69,7 +69,7 @@ export async function postLogs(req: Request, res: Response) {
       }
     })
   
-    if(log !== null){
+    if(log?.primeiro_log !== null){
       await prisma.vendedores.update({
         where: {
           cod_vend: !!vend_cli ? Number(vend_cli) : undefined
