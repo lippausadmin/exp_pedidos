@@ -59,6 +59,10 @@ export async function postLogs(req: Request, res: Response) {
 
   const { vend_cli } = req.query
 
+  if(Number(vend_cli) == 0){
+    return res.status(201).json('gerente logando')
+  }
+
   try{
     const log = await prisma.vendedores.findUnique({
       where: {
