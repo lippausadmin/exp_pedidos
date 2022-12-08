@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { isYesterday } from "date-fns";
 import { Request, Response } from "express";
 import { Telegraf } from "telegraf";
 
@@ -72,18 +73,18 @@ export async function postLogs(req: Request, res: Response) {
         primeiro_log: true
       }
     })
-  
-    if(log?.primeiro_log !== null){
+
+    if(log?.primeiro_log == null || isYesterday(new Date(log?.primeiro_log))){
       await prisma.vendedores.update({
         where: {
           cod_vend: !!vend_cli ? Number(vend_cli) : undefined
         },
         data: {
-          ultimo_log: new Date().toISOString()
+          primeiro_log: new Date().toISOString()
         }
       })
-  
-      return res.json('ultimo log')
+
+      return res.json('primeiro log')
     }
   
     await prisma.vendedores.update({
@@ -91,11 +92,12 @@ export async function postLogs(req: Request, res: Response) {
         cod_vend: !!vend_cli ? Number(vend_cli) : undefined
       },
       data: {
-        primeiro_log: new Date().toISOString()
+        ultimo_log: new Date().toISOString()
       }
     })
-  
-    return res.json('primeiro log')
+
+    return res.json('ultimo log')
+
   }
   catch(err){}
 
