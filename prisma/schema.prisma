@@ -474,8 +474,8 @@ model vendedores {
   mesa_vend    Decimal @db.Decimal(3, 0)
   email_vend   String  @db.VarChar(255)
   emp_vend     Int
-  ultimo_log   String?
   primeiro_log String?
+  ultimo_log   String?
 }
 
 model precos_erp {
