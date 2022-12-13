@@ -61,6 +61,8 @@ export async function postLogs(req: Request, res: Response) {
   const { vend_cli } = req.query
 
   if(Number(vend_cli) == 0){
+    console.log('gerente logando')
+    
     return res.status(201).json('gerente logando')
   }
 
@@ -84,6 +86,8 @@ export async function postLogs(req: Request, res: Response) {
         }
       })
 
+      console.log('primeiro log')
+
       return res.json('primeiro log')
     }
   
@@ -95,6 +99,8 @@ export async function postLogs(req: Request, res: Response) {
         ultimo_log: new Date().toISOString()
       }
     })
+
+    console.log('ultimo log')
 
     return res.json('ultimo log')
 
