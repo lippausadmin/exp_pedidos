@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { isPast, isYesterday } from "date-fns";
+import { isPast, isSameDay, isYesterday } from "date-fns";
 import { Request, Response } from "express";
 import { Telegraf } from "telegraf";
 
@@ -76,7 +76,7 @@ export async function postLogs(req: Request, res: Response) {
       }
     })
 
-    if(log?.primeiro_log == null || isPast(new Date(log?.primeiro_log))){
+    if(log?.primeiro_log == null || !isSameDay(new Date(log?.primeiro_log), new Date())){
       await prisma.vendedores.update({
         where: {
           cod_vend: !!vend_cli ? Number(vend_cli) : undefined
