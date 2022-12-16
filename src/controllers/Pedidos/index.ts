@@ -921,7 +921,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
       }).join("\n");
 
       await bot.telegram.sendMessage(chatId,
-        `OS PEDIDOS: \n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\nDE DATA SEGUINTE FORAM ENVIADOS`, {
+        `PEDIDOS AGENDADOS ENVIADOS: \n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\n`, {
           parse_mode: "HTML",
         }
       );
