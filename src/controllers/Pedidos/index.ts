@@ -665,9 +665,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
               carga: "1",
               // codigoCompletoTabela: !!produto.desc_combo ? '20229999' : '20220099' ,
               codigoCompletoTabela: getCodigoTabela(produto),
-              codigoOcorrencia: produto.cod_ocorrencia
-                .toString()
-                .padStart(3, "0"),
+              codigoOcorrencia: produto.cod_ocorrencia.toString().padStart(3, "0"),
               codigoProduto: produto.cod_prod.toString().padStart(10, "0"),
               codigoTabelaPreco: "99",
               codigoVendedor: pedido.vend_cli.toString().padStart(8, "0"),
@@ -685,7 +683,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
               itemOrigemAcaoSolavanco: 0,
               itemValidadoBonificaoAutomatica: false,
               numeroCliente: pedido.cod_cli.substring(5, 9),
-              percDesconto: produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0.01,
+              percDesconto: produto.qtde_cx >= 1 ? produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0 : (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100,
               perfilTabela: "",
               permiteAlterarQtdBonificada: false,
               possuiRegraHeishop: false,
