@@ -131,18 +131,18 @@ export async function getLogsCSV(req: Request, res: Response) {
     }
   })
 
-  const time = new Date().toLocaleString("pt-br", { timeZone: 'America/Bahia' }).replaceAll(' ', '-').replaceAll('/', '_').replaceAll(':', 'v')
+  const time = new Date().toISOString()
 
   const csv = new ObjectsToCsv(data)
 
-  await csv.toDisk(`./tmp/${time}.csv`);
+  await csv.toDisk(`/tmp/${time}.csv`);
 
   await bot.telegram.sendDocument(chatCSVId, {
     filename: `${new Date().toLocaleString("pt-br", { timeZone: 'America/Bahia' })}.csv`,
-    source: `./tmp/${time}.csv`
+    source: `/tmp/${time}.csv`
   })
 
   return res.json(data)
 
-  
+
 }
