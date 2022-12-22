@@ -138,7 +138,7 @@ export async function getLogsCSV(req: Request, res: Response) {
   await csv.toDisk(`/tmp/${time}.csv`);
 
   await bot.telegram.sendDocument(chatCSVId, {
-    filename: `${new Date().toLocaleString("pt-br", { timeZone: 'America/Bahia' })}.csv`,
+    filename: `${time.substring(0,10).split('-').reverse().join('/')}.csv`,
     source: `/tmp/${time}.csv`
   })
 
