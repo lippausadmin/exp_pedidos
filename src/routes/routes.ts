@@ -18,6 +18,7 @@ routes.get('/transmitir/pedidos', PedidosControllers.transmitirPedidos)
 routes.get('/vendedores/online', OnlineControllers.atulizarVendedoresOnline)
 routes.get('/vendedores/limpar', OnlineControllers.limparLogs)
 routes.get('/log', OnlineControllers.postLogs)
+routes.get('/log/csv', OnlineControllers.getLogsCSV)
 
 
 
