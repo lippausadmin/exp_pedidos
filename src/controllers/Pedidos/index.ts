@@ -488,7 +488,7 @@ export async function prePedido(req: Request, res: Response) {
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
-        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
+        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: ${cliente.lat_cli} - ${cliente.long_cli}\nGEO VENDEDOR: ${cliente.lat_vend} - ${cliente.long_vend}\nDISTANCIA: ${calcularRaio(cliente).toFixed(0)}\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
           return `<pre> &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()} - CX: ${padStart(item.qtde_cx, 3)} UN: ${padStart(item.qtde_unit, 3)} - ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)} - ${item.tab_preco_item} - ${tabelaAgrupada[item.tab_preco_item][0].descricao_tabela}${item.venda_adicional || item.tabela_promocional ? ' - 🎯 ' : ''}</pre>`
         }).join('\n')}`,
         { parse_mode: "HTML" }
