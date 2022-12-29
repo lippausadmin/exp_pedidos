@@ -43,6 +43,25 @@ function calcularRaio(cliente: any) {
   return d;
 }
 
+function calcularRaioMensagem(cliente: any) {
+  const { lat_vend, long_vend, lat_cli, long_cli } = cliente;
+
+  const R = 6371e3;
+  const φ1 = (lat_cli * Math.PI) / 180;
+  const φ2 = (lat_vend * Math.PI) / 180;
+  const Δφ = ((lat_vend - lat_cli) * Math.PI) / 180;
+  const Δλ = ((long_vend - long_cli) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const d = R * c;
+
+  return `${d.toFixed()} ${d > 150 ? '❌' : '✅'}`
+}
+
 function getCodigoTabela(produto: any) {
   if (!!produto.venda_adicional || !!produto.tabela_promocional) {
     return "20220299";
@@ -488,7 +507,7 @@ export async function prePedido(req: Request, res: Response) {
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
-        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaio(cliente).toFixed(0)}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
+        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente)}</b>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
           return `<pre> &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()} - CX: ${padStart(item.qtde_cx, 3)} UN: ${padStart(item.qtde_unit, 3)} - ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)} - ${item.tab_preco_item} - ${tabelaAgrupada[item.tab_preco_item][0].descricao_tabela}${item.venda_adicional || item.tabela_promocional ? ' - 🎯 ' : ''}</pre>`
         }).join('\n')}`,
         { parse_mode: "HTML" }
@@ -501,7 +520,7 @@ export async function prePedido(req: Request, res: Response) {
         },
       });
 
-      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaio(cliente).toFixed(0)}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
+      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente)}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
         { parse_mode: "HTML" }
       );
     }
