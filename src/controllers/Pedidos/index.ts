@@ -501,7 +501,7 @@ export async function prePedido(req: Request, res: Response) {
         },
       });
 
-      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
+      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: ${cliente.lat_cli} - ${cliente.long_cli}\nGEO VENDEDOR: ${cliente.lat_vend} - ${cliente.long_vend}\nDISTANCIA: ${calcularRaio(cliente).toFixed(0)}\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
         { parse_mode: "HTML" }
       );
     }
