@@ -513,16 +513,7 @@ export async function prePedido(req: Request, res: Response) {
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
-        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\n
-        CLIENTE: <b>${cli?.fantasia_cli}</b>\n
-        ${cli?.bairro_cli}/${cli?.cidade_cli}\n
-        CANAL: <b>${canal?.desc_canal}</b>\n
-        FORA ROTA: ${cliente.fora_rota ? '✅' : '❌'}\n
-        PEDIDO: <b>${pedido.num_pedido}</b>\n
-        DATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\n
-        GEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\n
-        GEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\n
-        DISTANCIA: <b>${calcularRaioMensagem(cliente)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
+        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nCLIENTE: <b>${cli?.fantasia_cli}</b>\n<b>${cli?.bairro_cli}</b>/<b>${cli?.cidade_cli}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nFORA ROTA: ${cliente.fora_rota ? '✅' : '❌'}\nPEDIDO: <b>${pedido.num_pedido}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
           return `<pre> &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()} - CX: ${padStart(item.qtde_cx, 3)} UN: ${padStart(item.qtde_unit, 3)} - ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)} - ${item.tab_preco_item} - ${tabelaAgrupada[item.tab_preco_item][0].descricao_tabela}${item.venda_adicional || item.tabela_promocional ? ' - 🎯 ' : ''}</pre>`
         }).join('\n')}`,
         { parse_mode: "HTML", disable_web_page_preview: true }
