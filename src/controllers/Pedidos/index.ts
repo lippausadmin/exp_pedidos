@@ -526,7 +526,7 @@ export async function prePedido(req: Request, res: Response) {
         },
       });
 
-      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nCLIENTE: <b>${cli?.fantasia_cli}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente)}</b>\n<a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
+      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nCLIENTE: <b>${cli?.fantasia_cli}</b>\n<b>${cli?.bairro_cli.trim()}</b>|<b>${cli?.cidade_cli.trim()}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nPEDIDO: <b>${pedido.num_pedido}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} / ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
         { parse_mode: "HTML", disable_web_page_preview: true }
       );
     }
