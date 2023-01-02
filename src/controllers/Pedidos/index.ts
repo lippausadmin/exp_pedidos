@@ -59,7 +59,7 @@ function calcularRaioMensagem(cliente: any) {
 
   const d = R * c;
 
-  return `${d.toFixed()} ${d > 150 ? '❌' : '✅'}`
+  return `${d.toFixed()} ${d > 300 ? '❌' : '✅'}`
 }
 
 function getCodigoTabela(produto: any) {
