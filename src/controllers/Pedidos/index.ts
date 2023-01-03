@@ -644,8 +644,10 @@ export async function transmitirPedidos(req: Request, res: Response) {
     const promises = await Promise.all(
       pedidos.map(async (pedido) => {
         let { itens } = pedido;
+
+
   
-        if (pedido.data_entrega == null || getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1) {
+        if ((pedido.data_entrega == null || getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1) && new Date().getDay() != 0) {
           console.log("pedido para o próximo dia útil");
   
           // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
