@@ -27,7 +27,7 @@ model ativos {
 }
 
 model canal_venda {
-  cod_canal  String @unique(map: "canal_venda_cod_canal_idx") @db.VarChar(2)
+  cod_canal  String @id @unique(map: "canal_venda_cod_canal_idx") @db.VarChar(2)
   desc_canal String @db.VarChar(255)
 }
 
@@ -58,6 +58,7 @@ model clientes_erp {
   tab_cli      Int      @default(0)
   endereco_cli String?  @db.VarChar
   despreza_adf Int      @default(0)
+  credito_cli  Float?   @default(0) @db.Real
 }
 
 model clientes_geo {
@@ -70,12 +71,13 @@ model clientes_geo {
 }
 
 model combos_capa {
-  cod_combo         Int    @unique(map: "combos_capa_cod_combo_idx")
-  desc_combo        String @db.VarChar
-  tipo_combo        String @db.VarChar
+  cod_combo         Int     @unique(map: "combos_capa_cod_combo_idx")
+  desc_combo        String  @db.VarChar
+  tipo_combo        String  @db.VarChar
   max_venda         Int?
-  seq_combo         Int    @default(9999)
+  seq_combo         Int     @default(9999)
   qtde_minima_total Int?
+  status_combo      Boolean @default(true)
 }
 
 model combos_itens {
@@ -147,19 +149,23 @@ model fds_segmento_itens {
 }
 
 model historico_erp {
-  data_pedido  DateTime @db.Date
-  cod_cli      String   @db.VarChar
-  num_pedido   Decimal  @db.Decimal
-  cod_prod     Int
-  volume       Float    @db.Real
-  receita      Float    @db.Real
-  mes          String?  @db.VarChar
-  semana       String?  @db.VarChar
-  num_tabela   Int
-  chave_pedido String   @db.VarChar
-  hecto        Float    @default(0) @db.Real
+  data_pedido   DateTime @db.Date
+  cod_cli       String   @db.VarChar
+  num_pedido    Decimal  @db.Decimal
+  cod_prod      Int
+  volume        Float    @db.Real
+  receita       Float    @db.Real
+  mes           String?  @db.VarChar
+  semana        String?  @db.VarChar
+  num_tabela    Int
+  chave_pedido  String   @db.VarChar
+  hecto         Float    @default(0) @db.Real
+  cond_pag      String?  @db.VarChar
+  origem_pedido String?  @db.VarChar
+  mot           String?  @db.VarChar
+  tel_mot       String?  @db.VarChar
 
-  @@unique([num_pedido, cod_prod, num_tabela, chave_pedido], map: "idx_historico")
+  @@unique([cod_cli, num_pedido, cod_prod, num_tabela, chave_pedido], map: "idx_historico")
 }
 
 model historico_visita {
@@ -177,6 +183,7 @@ model liberacao_vendedores {
   cod_vend                  Int
   perc_ped_fora_rota        Float   @db.Real
   permitir_visita_fora_raio Boolean
+  hora_final_pedidos        String  @db.VarChar
 
   @@unique([cod_vend, perc_ped_fora_rota, permitir_visita_fora_raio], map: "id_liberacao_vendedores")
 }
@@ -234,6 +241,7 @@ model ocorrencias {
   nome_oco       String  @db.VarChar
   clientes_todos Boolean
   exibir_oco     Boolean @default(true)
+  tipo_oco       String? @db.VarChar
 }
 
 model parametros {
@@ -249,15 +257,11 @@ model parametros {
   tempo_voltar_sem_motivar  Int     @default(30)
   hora_inicial_pedidos      String  @default("10:00:00") @db.VarChar
   hora_final_pedidos        String  @default("20:36:00") @db.VarChar
-  tabela_erp_sku_ano        String  @default(dbgenerated("2022")) @db.VarChar
-  tabela_erp_sku_versao     String  @default("01") @db.VarChar
-  tabela_erp_sku_num_tab    String  @default("99") @db.VarChar
-  tabela_erp_promo_ano      String  @default("2022") @db.VarChar
-  tabela_erp_promo_versao   String  @default("02") @db.VarChar
-  tabela_erp_promo_num_tab  String  @default("99") @db.VarChar
-  tabela_erp_combo_ano      String  @default("2022") @db.VarChar
-  tabela_erp_combo_versao   String  @default("03") @db.VarChar
-  tabela_erp_combo_num_tab  String  @default("99") @db.VarChar
+  tabela_sku_erp            String  @default("20220199") @db.VarChar
+  tabela_promo_erp          String  @default("20220299") @db.VarChar
+  tabela_combo_erp          String  @default("20220399") @db.VarChar
+  qtde_skus_promo           Int     @default(4)
+  qtde_skus_venda_adicional Int     @default(2)
 
   @@unique([antecipar_rota, exibir_cli_fora_atend, permitir_visita_fora_raio], map: "id_parametros")
 }
@@ -291,6 +295,7 @@ model pedidos_capa {
   pedido_fora_rota    Boolean
   motivo_nao_compra   String?         @db.VarChar
   cpf_cnpj_cli        String?         @db.VarChar
+  observacao          String?         @db.VarChar
   itens               pedidos_itens[]
 }
 
@@ -332,6 +337,8 @@ model precos_capa {
   venda_adicional    Boolean
   tabela_promocional Boolean   @default(false)
   promo_cobertura    Boolean   @default(false)
+  dia_ent_futura     Int?
+  exclusiva          Boolean   @default(false)
 }
 
 model precos_clientes {
@@ -461,11 +468,12 @@ model titulos_pagos {
 }
 
 model usuarios {
-  email_usuario  String  @id @unique(map: "usuarios_email_usuario_idx1") @db.VarChar(255)
+  email_usuario  String  @id @db.VarChar(255)
   nome_usuario   String  @db.VarChar(255)
   senha_usuario  String  @db.VarChar(255)
   tipo_usuario   String  @db.VarChar(255)
   status_usuario Boolean
+  mesa           Int?
 }
 
 model vendedores {
@@ -474,13 +482,134 @@ model vendedores {
   mesa_vend    Decimal @db.Decimal(3, 0)
   email_vend   String  @db.VarChar(255)
   emp_vend     Int
-  primeiro_log String?
-  ultimo_log   String?
+  ultimo_log   String? @db.VarChar
+  primeiro_log String? @db.VarChar
 }
 
 model precos_erp {
   cod_prod Int   @id
   preco_cx Float @db.Real
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model erp_pedidos_bonificados {
+  data_emissao DateTime? @db.Date
+  num_pedido   Decimal   @db.Decimal
+  cod_cli      String    @db.VarChar
+  cod_prod     Int
+  desc_prod    String?   @db.VarChar
+  cod_oco      Int
+  volume       Float?    @db.Real
+
+  @@index([num_pedido, cod_cli, cod_prod, cod_oco], map: "idx_bonificados")
+  @@ignore
+}
+
+model erp_pedidos_cancelados {
+  data_emissao  DateTime? @db.Date
+  num_pedido    Decimal   @db.Decimal
+  cod_cli       String    @db.VarChar
+  cod_prod      Decimal   @db.Decimal
+  cod_oco       Decimal   @db.Decimal
+  volume        Float?    @db.Real
+  receita       Float?    @db.Real
+  origem_pedido String?   @db.VarChar
+  motivo_cancel String?   @db.VarChar
+  hora_cancel   Decimal?  @db.Decimal
+  usu_cancel    String?   @db.VarChar
+
+  @@unique([num_pedido, cod_cli, cod_prod, cod_oco], map: "idx_cancelado")
+}
+
+model erp_pedidos_cortados {
+  data_emissao  DateTime? @db.Date
+  num_pedido    Decimal   @db.Decimal
+  cod_cli       String    @db.VarChar
+  cod_prod      Int
+  cod_oco       Int
+  volume        Float?    @db.Real
+  receita       Float?    @db.Real
+  origem_pedido String?   @db.VarChar
+
+  @@unique([num_pedido, cod_cli, cod_prod, cod_oco], map: "idx_corte")
+}
+
+model erp_pedidos_devolvidos {
+  data_emissao  DateTime? @db.Date
+  num_pedido    Decimal   @db.Decimal
+  cod_cli       String    @db.VarChar
+  cod_prod      Int
+  cod_oco       Int
+  volume        Float?    @db.Real
+  receita       Float?    @db.Real
+  origem_pedido String?   @db.VarChar
+  cod_mot       String?   @db.VarChar
+  motivo        String?   @db.VarChar
+
+  @@unique([num_pedido, cod_cli, cod_prod, cod_oco], map: "idx_devolvidos")
+}
+
+model erp_pedidos_reprogramados {
+  data_emissao  DateTime? @db.Date
+  pedido_antigo Decimal   @db.Decimal
+  pedido_novo   Decimal   @db.Decimal
+  cod_cli       String    @db.VarChar
+  cod_prod      Int
+  cod_oco       Int
+  volume        Float?    @db.Real
+  receita       Float?    @db.Real
+  origem_pedido String?   @db.VarChar
+
+  @@unique([pedido_antigo, pedido_novo, cod_cli, cod_prod, cod_oco], map: "idx_reprogramados")
+}
+
+model erp_pedidos_trocas {
+  data_emissao DateTime? @db.Date
+  num_pedido   Decimal   @db.Decimal
+  cod_cli      String    @db.VarChar
+  cod_prod     Int
+  cod_oco      Int
+  volume       Float?    @db.Real
+  receita      Float?    @db.Real
+
+  @@unique([num_pedido, cod_cli, cod_prod, cod_oco], map: "idx_trocas")
+}
+
+model precos_canal_vendedor {
+  vend_cli  Int
+  cod_canal String @db.VarChar
+  num_tab   Int
+
+  @@unique([vend_cli, cod_canal, num_tab], map: "idx_precos_canal_vendedor")
+}
+
+model precos_cidade {
+  cidade_cli String @db.VarChar
+  num_tab    Int
+
+  @@unique([cidade_cli, num_tab], map: "idx_precos_cidade")
+}
+
+model precos_cidade_vendedor {
+  vend_cli   Int
+  cidade_cli String @db.VarChar
+  num_tab    Int
+
+  @@unique([vend_cli, cidade_cli, num_tab], map: "idx_precos_cidade_vendedor")
+}
+
+model precos_vendedor_canal_cidade {
+  vend_cli   Int
+  cod_canal  String @db.VarChar
+  cidade_cli String @db.VarChar
+  num_tab    Int
+
+  @@unique([vend_cli, cod_canal, cidade_cli, num_tab], map: "idx_precos_vendedor_canal_cidade")
+}
+
+model status_vendedores {
+  vendedor   Int     @unique(map: "idx_vendedor")
+  ultimo_log String? @db.VarChar
 }
 
 model vw_tarefas_por_vendedores {
@@ -718,3 +847,4 @@ model vw_historico_promocoes {
 
   @@unique([chave_pedido, cod_prod, num_tabela], map: "id_vw_historico_promocoes")
 }
+
