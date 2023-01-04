@@ -344,6 +344,21 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
         } catch (err) {
           console.log(err);
         }
+        try {
+          await prisma.pedidos_capa.updateMany({
+            data: {
+              transmitido: true,
+              horario_transmissao: new Date().toISOString(),
+            },
+            where: {
+              num_pedido: {
+                in: promiseReturn.filter((each: any) => each.boolean == false && each.frase == 'Pedido já foi transmitido').map((each: any) => each.num_pedido),
+              },
+            },
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }
       // BOT ^^^^
     }
@@ -506,6 +521,17 @@ export async function prePedido(req: Request, res: Response) {
     }
   })
 
+  const n_pedido: any = await prisma.$queryRaw`
+    SELECT
+      p.num_pedido
+    FROM
+      pedidos_capa p
+    WHERE
+      p.data_emissao = CURRENT_DATE
+      AND p.cod_cli = '${pedido.cod_cli}'
+      AND p.motivo_nao_compra = 'Z'
+  `
+
   const parametros: any = await prisma.parametros.findMany()
 
   const produtosAgrupado = groupBy(produtos, ({cod_prod}) => cod_prod)
@@ -515,7 +541,7 @@ export async function prePedido(req: Request, res: Response) {
   try {
     if (pedido.motivo_nao_compra == "Z") {
       await bot.telegram.sendMessage(
-        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nCLIENTE: <b>${cli?.fantasia_cli.trim()}</b>\nPASTA: <b>${cli?.pasta_cli}</b>\n<b>${cli?.bairro_cli.trim()}</b>|<b>${cli?.cidade_cli.trim()}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nFORA DE ROTA: ${cliente.fora_rota ? '✅' : '❌'}\nPEDIDO: <b>${pedido.num_pedido}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} , ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente, parametros[0].raio_atendimento)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
+        chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nCLIENTE: <b>${cli?.fantasia_cli.trim()}</b>\nPASTA: <b>${cli?.pasta_cli}</b>\n<b>${cli?.bairro_cli.trim()}</b>|<b>${cli?.cidade_cli.trim()}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nFORA DE ROTA: ${cliente.fora_rota ? '✅' : '❌'}\nPEDIDO: <b>${pedido.num_pedido} | ${n_pedido.length}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} , ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente, parametros[0].raio_atendimento)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
           return `<pre> &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()} - CX: ${padStart(item.qtde_cx, 3)} UN: ${padStart(item.qtde_unit, 3)} - ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)} - ${item.tab_preco_item} - ${tabelaAgrupada[item.tab_preco_item][0].descricao_tabela}${item.venda_adicional || item.tabela_promocional ? ' - 🎯 ' : ''}</pre>`
         }).join('\n')}`,
         { parse_mode: "HTML", disable_web_page_preview: true }
