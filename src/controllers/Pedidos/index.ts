@@ -945,6 +945,20 @@ export async function transmitirPedidos(req: Request, res: Response) {
           parse_mode: "HTML",
         }
       );
+
+      // await prisma.pedidos_capa.updateMany({
+      //   data: {
+      //     transmitido: true
+      //   },
+      //   where: {
+      //     num_pedido: {
+      //       in: promiseReturn.filter((each: any) => each.boolean == false).map((each: any) => { return each.num_pedido})
+      //     }
+      //   }
+      // })
+
+      // ^^^^ ATUALIZAR PEDIDOS QUE DERAM RETORNO JÁ TRANSMITIDO
+
     } catch (err) {
       console.log(err);
     }
