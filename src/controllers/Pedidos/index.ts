@@ -529,7 +529,6 @@ export async function prePedido(req: Request, res: Response) {
     WHERE
       p.data_emissao = CURRENT_DATE
       AND p.cod_cli = '${pedido.cod_cli}'
-      AND p.motivo_nao_compra = 'Z'
   `
 
   const especial = await prisma.liberacao_vendedores.findFirst({
