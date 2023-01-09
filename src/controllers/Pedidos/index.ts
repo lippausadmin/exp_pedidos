@@ -1001,13 +1001,22 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
   const time = new Date().toISOString()
 
-  const csv = new ObjectsToCsv(pedidosEnviados)
+  const csv_matriz = new ObjectsToCsv(pedidosEnviados.filter(({vend_cli}) => vend_cli < 300))
 
-  await csv.toDisk(`/tmp/${time}.csv`);
+  const csv_filial = new ObjectsToCsv(pedidosEnviados.filter(({vend_cli}) => vend_cli > 300))
+
+  await csv_matriz.toDisk(`/tmp/${time}_matriz.csv`);
+
+  await csv_filial.toDisk(`/tmp/${time}_filial.csv`);
 
   await bot.telegram.sendDocument(chatId, {
     filename: `pedidos_transmitidos_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
-    source: `/tmp/${time}.csv`
+    source: `/tmp/${time}_matriz.csv`
+  })
+
+  await bot.telegram.sendDocument(chatFilial, {
+    filename: `pedidos_transmitidos_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
+    source: `/tmp/${time}_filial.csv`
   })
 
   const updatePedido = await prisma.pedidos_capa.updateMany({
