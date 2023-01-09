@@ -640,7 +640,6 @@ export async function prePedido(req: Request, res: Response) {
 }
 
 export async function postPedidosOffline(req: Request, res: Response) {
-  const chatId = process.env.CHAT_ID ? process.env.CHAT_ID : "";
 
   // FUNÇÃO PARA TRANSMITIR PEDIDOS OFF PARA O NOSSO DB
 
@@ -690,21 +689,21 @@ export async function postPedidosOffline(req: Request, res: Response) {
 
   // OS DADOS SÃO ESCRITOS NO pedidos_capa E pedidos_itens AO MESMO TEMPO ^^
 
-  if (dataCapa.length > 0) {
-    try {
-      const resposta = dataCapa.map((pedido) => {
-          return `${pedido.num_pedido}`;
-        }).join("\n");
+  // if (dataCapa.length > 0) {
+  //   try {
+  //     const resposta = dataCapa.map((pedido) => {
+  //         return `${pedido.num_pedido}`;
+  //       }).join("\n");
 
-      await bot.telegram.sendMessage(chatId,
-        `O VENDEDOR ${dataCapa[0].vend_cli} MANDOU OS PEDIDOS: \n${resposta} \nVIA OFFLINE`
-      );
+  //     await bot.telegram.sendMessage(chatId,
+  //       `O VENDEDOR ${dataCapa[0].vend_cli} MANDOU OS PEDIDOS: \n${resposta} \nVIA OFFLINE`
+  //     );
 
-      // acompanhar pedidos piloto ^^^
-    } catch (err) {
-      console.log(err);
-    }
-  }
+  //     // acompanhar pedidos piloto ^^^
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }
 
   const retorno = await Promise.all(
     pedidos.map(async (pedido) => {
@@ -712,7 +711,11 @@ export async function postPedidosOffline(req: Request, res: Response) {
     })
   );
 
-
+  const bot = await Promise.all(
+    pedidos.map(async (pedido) => {
+      await enviarMensagemBot(pedido.num_pedido, pedido.cod_cli, true)
+    })
+  )
 
   return res.json("pedido");
 }
