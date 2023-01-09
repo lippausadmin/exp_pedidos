@@ -16,6 +16,7 @@ import { groupBy, padEnd, padStart } from "lodash";
 import ObjectsToCsv from 'objects-to-csv'
 
 
+
 var prisma = new PrismaClient();
 
 var botToken = process.env.BOT_TOKEN ? process.env.BOT_TOKEN : "";
@@ -23,6 +24,10 @@ var botToken = process.env.BOT_TOKEN ? process.env.BOT_TOKEN : "";
 var bot = new Telegraf(botToken);
 
 var chatId = process.env.CHAT_ID ? process.env.CHAT_ID : "";
+
+var chatFilial = process.env.CHAT_FILIAL ? process.env.CHAT_FILIAL : "";
+
+
 
 function calcularRaio(cliente: any) {
   const { lat_vend, long_vend, lat_cli, long_cli } = cliente;
@@ -41,6 +46,16 @@ function calcularRaio(cliente: any) {
   const d = R * c;
 
   return d;
+}
+
+function getChatID(vend_cli: number) {
+  if(vend_cli < 300){
+    return chatId
+  }
+
+  else {
+    return chatFilial
+  }
 }
 
 function calcularRaioMensagem(cliente: any, raio_atendimento: number) {
@@ -505,7 +520,7 @@ async function enviarMensagemBot(num_pedido: string, cod_cli: string, offline: b
     }).join('\n')} ` : `MOTIVO: <b>${motivo} ❌</b>`}`
   }).join('\n')
 
-  await bot.telegram.sendMessage(chatId, mensagem, { parse_mode: "HTML", disable_web_page_preview: true })
+  await bot.telegram.sendMessage(getChatID(Number(pedidos[0].vend_cli)), mensagem, { parse_mode: "HTML", disable_web_page_preview: true })
 
 }
 
@@ -562,7 +577,9 @@ export async function prePedido(req: Request, res: Response) {
           venda_adicional: Boolean(produto.venda_adicional),
         };
       });
-    } else {
+    } 
+    
+    else {
       counter++;
 
       return {
@@ -591,9 +608,7 @@ export async function prePedido(req: Request, res: Response) {
   // ITENS DO CARRINHO SÃO PADRONIZADOS PARA O pedidos_itens ^^
 
   const data = {
-    num_pedido: `${cliente.cod_cli}/${cliente.final_atendimento
-      .replace(/[-:.TZ]/g, "")
-      .substring(0, 12)}`,
+    num_pedido: `${cliente.cod_cli}/${cliente.final_atendimento.replace(/[-:.TZ]/g, "").substring(0, 12)}`,
     data_emissao: new Date().toISOString(),
     cod_cli: cliente.cod_cli,
     cod_pag: !!cond_pag ? cond_pag.cod_pag : cliente.cond_pag,
