@@ -13,7 +13,7 @@ import { Request, Response } from "express";
 import control from "../../services/api";
 import { Telegraf } from "telegraf";
 import { groupBy, padEnd, padStart } from "lodash";
-
+import ObjectsToCsv from 'objects-to-csv'
 
 
 var prisma = new PrismaClient();
@@ -96,13 +96,13 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
   const descontoBonificacao = await prisma.precos_erp.findMany()
 
-  const descontoBonificacaoAgrupado = groupBy(descontoBonificacao, ({cod_prod}) => cod_prod)
+  const descontoBonificacaoAgrupado = groupBy(descontoBonificacao, ({ cod_prod }) => cod_prod)
 
   const promiseReturn: any[] = [];
 
   console.log("ENTROU");
 
-  if (getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1 ||pedido.data_entrega == null) {
+  if (getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1 || pedido.data_entrega == null) {
     console.log("pedido para o próximo dia útil");
 
     // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
@@ -152,8 +152,8 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
           valorBruto:
             Number(produto.preco_item) * produto.qtde_unit +
             Number(produto.preco_item) *
-              Number(produto.qtde_prod) *
-              produto.qtde_cx,
+            Number(produto.qtde_prod) *
+            produto.qtde_cx,
           valorDescontoCapa: 0,
           valorDescontoItem: 0,
           valorImpostoBarreira: 0,
@@ -161,13 +161,13 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
           valorLiquido:
             Number(produto.preco_item) * produto.qtde_unit +
             Number(produto.preco_item) *
-              Number(produto.qtde_prod) *
-              produto.qtde_cx,
+            Number(produto.qtde_prod) *
+            produto.qtde_cx,
           valorLiquidoFinal:
             Number(produto.preco_item) * produto.qtde_unit +
             Number(produto.preco_item) *
-              Number(produto.qtde_prod) *
-              produto.qtde_cx,
+            Number(produto.qtde_prod) *
+            produto.qtde_cx,
           valorLiquidoUmAvulso: Number(produto.preco_item.toFixed(6)),
           valorLiquidoUmaCaixa: Number(produto.preco_item) * produto.qtde_prod,
           valorVerba: 0,
@@ -319,7 +319,7 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
       promiseReturn.push({
         frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
         num_pedido: pedido.num_pedido,
-        boolean: fetch.data.pedidos[0].retornoTransmissaoWebService =="Pedido transmitido com sucesso",
+        boolean: fetch.data.pedidos[0].retornoTransmissaoWebService == "Pedido transmitido com sucesso",
       });
 
       const updatePedido = await prisma.pedidos_capa.updateMany({
@@ -337,8 +337,8 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
       if (promiseReturn.filter((each: any) => each.boolean == false).length > 0) {
         try {
           const resposta = promiseReturn.filter((each: any) => each.boolean == false).map((pedido) => {
-              return `NUM_PEDIDO: ${pedido.num_pedido} \nMOTIVO: ${pedido.frase}\n`;
-            }).join("\n");
+            return `NUM_PEDIDO: ${pedido.num_pedido} \nMOTIVO: ${pedido.frase}\n`;
+          }).join("\n");
 
           await bot.telegram.sendMessage(chatId, `PEDIDOS NÃO ENVIADOS: \n\n${resposta}`);
         } catch (err) {
@@ -511,7 +511,7 @@ async function enviarMensagemBot(num_pedido: string, cod_cli: string, offline: b
 
 
 
-                  // UTILS ^^^^^^^^^^^^^^^^^^^^    ROTAS DA API \/\/\/\/\/\/\/\/\/\/\/\/\/           
+// UTILS ^^^^^^^^^^^^^^^^^^^^    ROTAS DA API \/\/\/\/\/\/\/\/\/\/\/\/\/           
 
 
 
@@ -552,7 +552,7 @@ export async function prePedido(req: Request, res: Response) {
           preco_item: Number(produto.preco_prod / produto.qtde_prod),
           valor_total_item:
             (Number(produto.preco_prod) / Number(produto.qtde_prod)) *
-              produto.quantidadeAvulsa +
+            produto.quantidadeAvulsa +
             Number(produto.preco_prod) * produto.quantidadeCaixa,
           desconto_preco: 0,
           cod_combo: produto.cod_combo,
@@ -580,7 +580,7 @@ export async function prePedido(req: Request, res: Response) {
         desconto_preco: 0,
         valor_total_item:
           (Number(each.preco_prod) / Number(each.qtde_prod)) *
-            each.quantidadeAvulsa +
+          each.quantidadeAvulsa +
           Number(each.preco_prod) * each.quantidadeCaixa,
         tabela_promocional: Boolean(each.tabela_promocional),
         venda_adicional: Boolean(each.venda_adicional),
@@ -625,7 +625,7 @@ export async function prePedido(req: Request, res: Response) {
 
   try {
     await enviarMensagemBot(pedido.num_pedido, pedido.cod_cli, false)
-  } 
+  }
   catch (err) {
     console.log(err);
   }
@@ -740,248 +740,260 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
   console.log("ENTROU");
 
-  if(true){
+  if (true){
     const promises = await Promise.all(
       pedidos.map(async (pedido) => {
         let { itens } = pedido;
 
-
-  
         if ((pedido.data_entrega == null || getBusinessDatesCount(new Date(pedido.data_entrega), new Date()) <= 1) && new Date().getDay() != 0) {
           console.log("pedido para o próximo dia útil");
-  
+
           // \/ COLOCAR TRUE QUANDO A API ESTIVER EM SENDO UTILIZADA PRA ENVIAR PEDIDOS A CONTROL
-  
+
           const taxa: any = await prisma.condicao_pagamento.findFirst({
             where: {
               cod_pag: !!pedido.cod_pag ? pedido.cod_pag : ''
             }
           })
-  
+
           const descontoBonificacao = await prisma.precos_erp.findMany()
-  
-          const descontoBonificacaoAgrupado = groupBy(descontoBonificacao, ({cod_prod}) => cod_prod)
-        
-        if (true) {
-          const itensBase: any[] = itens.map((produto: any) => {
-            return {
-              acaoQtdAutorizada: 0,
-              bonusGerado: 0,
+
+          const descontoBonificacaoAgrupado = groupBy(descontoBonificacao, ({ cod_prod }) => cod_prod)
+
+          if (true) {
+            const itensBase: any[] = itens.map((produto: any) => {
+              return {
+                acaoQtdAutorizada: 0,
+                bonusGerado: 0,
+                bonusUtilizado: 0,
+                carga: "1",
+                // codigoCompletoTabela: !!produto.desc_combo ? '20229999' : '20220099' ,
+                codigoCompletoTabela: getCodigoTabela(produto),
+                codigoOcorrencia: produto.cod_ocorrencia.toString().padStart(3, "0"),
+                codigoProduto: produto.cod_prod.toString().padStart(10, "0"),
+                codigoTabelaPreco: "99",
+                codigoVendedor: pedido.vend_cli.toString().padStart(8, "0"),
+                // codigoVendedor: `00000R${cliente.vend_cli}`,
+                dia: getDay(new Date(pedido.final_atendimento)).toString(),
+                faixaBandaOrigem: "",
+                flagDev: false,
+                horaInicialPedido: pedido.inicio_atendimento
+                  .replace(/[-:.TZ]/g, "")
+                  .substring(0, 14),
+                itemAlteradoBandaPreco: 0,
+                itemCancelado: false,
+
+                itemOrigemAcaoMercado: false,
+                itemOrigemAcaoSolavanco: 0,
+                itemValidadoBonificaoAutomatica: false,
+                numeroCliente: pedido.cod_cli.substring(5, 9),
+                percDesconto: produto.qtde_cx >= 1 ? produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0 : (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100,
+                perfilTabela: "",
+                permiteAlterarQtdBonificada: false,
+                possuiRegraHeishop: false,
+                precoNegociado: false,
+                precoUn: Number(produto.preco_item.toFixed(6)),
+                qtdeAvulsa: produto.qtde_unit,
+                qtdeCaixa: produto.qtde_cx,
+
+                regiaoCliente: pedido.cod_cli.substring(0, 4),
+                tipoRecolhimento: "",
+                valorAcrescimoCapa: 0,
+                valorBonificado: 0,
+                valorBruto:
+                  Number(produto.preco_item) * produto.qtde_unit +
+                  Number(produto.preco_item) *
+                  Number(produto.qtde_prod) *
+                  produto.qtde_cx,
+                valorDescontoCapa: 0,
+                valorDescontoItem: 0,
+                valorImpostoBarreira: 0,
+                valorIpi: 0,
+                valorLiquido:
+                  Number(produto.preco_item) * produto.qtde_unit +
+                  Number(produto.preco_item) *
+                  Number(produto.qtde_prod) *
+                  produto.qtde_cx,
+                valorLiquidoFinal:
+                  Number(produto.preco_item) * produto.qtde_unit +
+                  Number(produto.preco_item) *
+                  Number(produto.qtde_prod) *
+                  produto.qtde_cx,
+                valorLiquidoUmAvulso: Number(produto.preco_item.toFixed(6)),
+                valorLiquidoUmaCaixa:
+                  Number(produto.preco_item) * produto.qtde_prod,
+                valorVerba: 0,
+                valorVerbaUtilizadaGL: 0,
+              };
+            });
+
+            const pedidoBase: PedidoProps = {
               bonusUtilizado: 0,
-              carga: "1",
-              // codigoCompletoTabela: !!produto.desc_combo ? '20229999' : '20220099' ,
-              codigoCompletoTabela: getCodigoTabela(produto),
-              codigoOcorrencia: produto.cod_ocorrencia.toString().padStart(3, "0"),
-              codigoProduto: produto.cod_prod.toString().padStart(10, "0"),
-              codigoTabelaPreco: "99",
-              codigoVendedor: pedido.vend_cli.toString().padStart(8, "0"),
-              // codigoVendedor: `00000R${cliente.vend_cli}`,
+              carga: new Date(pedido.final_atendimento)
+                .getMilliseconds()
+                .toString(),
+              // carga: '567',
+              chaveMobiltec: `${pedido.vend_cli.toString()[0] == "3" ? "3601" : "2016"
+                }-${pedido.vend_cli.toString().padStart(8, "0")}-20221015175714620`,
+              // chaveMobiltec: "2016-00000111-20221015175714620",
+              codigoCliente: pedido.cod_cli.replace("-", ""), // string sem ' - '
+              // codigoCliente: "00019812", ^^
+              codigoCondicaoPagamento: !!pedido.cod_pag ? pedido.cod_pag.substring(2, 4) : null, // string
+              // codigoCondicaoPagamento: "77", ^^
+              codigoErpTerceiro: "",
+              codigoMotivoNaoCompra:
+                pedido.motivo_nao_compra == "Z" ? "S" : pedido.motivo_nao_compra,
+              codigoTipoCobranca: !!pedido.cod_pag ? pedido.cod_pag.substring(0, 1) : null,
+              codigoVendedor: pedido.vend_cli.toString().padStart(8, "0"), // string 8 length
+              // codigoVendedor: "00000111", ^^
+              coordGpsForaArea: false,
+              cpfCnpj: !!pedido.cpf_cnpj_cli
+                ? pedido.cpf_cnpj_cli.substring(2, 99)
+                : "41952551000999",
+
+              // CLIENTE ^^^
+
+              dataEmissao: new Date(new Date().toUTCString())
+                .toISOString()
+                .replace(/[-:.TZ]/g, "")
+                .substring(0, 14),
+              // dataEmissao: "20221017000000",
+              dataEntrega: !!pedido.data_entrega
+                ? pedido.data_entrega.replaceAll("-", "")
+                : null,
+              dataHoraUltimaEdicao: pedido.final_atendimento
+                .replace("T", " ")
+                .substring(0, 19),
+              // dataHoraUltimaEdicao: "2022-10-17 09:38:40",
+              desbloqueioGPSERP: false,
               dia: getDay(new Date(pedido.final_atendimento)).toString(),
-              faixaBandaOrigem: "",
-              flagDev: false,
+              distanciaGPS: calcularRaio(pedido).toFixed(0),
+              // distanciaGPS: 11684, calcular distancia do vendedor até o cliente
+              duracaoPedido: differenceInSeconds(
+                new Date(pedido.final_atendimento),
+                new Date(pedido.inicio_atendimento)
+              ),
+              gpsLatitude: pedido.lat_vend.toString(),
+              // gpsLatitude: "-20.3321354",
+              gpsLongitude: pedido.long_vend.toString(),
+              // gpsLongitude: "-40.4011105",
+              horaFinalPedido: pedido.final_atendimento
+                .replace(/[-:.TZ]/g, "")
+                .substring(0, 14),
+              // horaFinalPedido: "20221017093837",
+              horaFinalPedidoTZ: "-03:00",
               horaInicialPedido: pedido.inicio_atendimento
                 .replace(/[-:.TZ]/g, "")
                 .substring(0, 14),
-              itemAlteradoBandaPreco: 0,
-              itemCancelado: false,
-  
-              itemOrigemAcaoMercado: false,
-              itemOrigemAcaoSolavanco: 0,
-              itemValidadoBonificaoAutomatica: false,
-              numeroCliente: pedido.cod_cli.substring(5, 9),
-              percDesconto: produto.qtde_cx >= 1 ? produto.cod_ocorrencia == 4 || produto.cod_ocorrencia == 2 ? (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100 : 0 : (1 - (Number(produto.preco_item) * produto.qtde_prod / descontoBonificacaoAgrupado[produto.cod_prod][0].preco_cx)) * 100,
-              perfilTabela: "",
-              permiteAlterarQtdBonificada: false,
-              possuiRegraHeishop: false,
-              precoNegociado: false,
-              precoUn: Number(produto.preco_item.toFixed(6)),
-              qtdeAvulsa: produto.qtde_unit,
-              qtdeCaixa: produto.qtde_cx,
-  
+              // horaInicialPedido: "20221017093718",
+              horaInicialPedidoTZ: "-03:00",
+              imediato: false,
+              intervaloSincronismo: 0,
+
+              itens: itensBase.flat(),
+
+              licenca: pedido.vend_cli.toString()[0] == "3" ? "3601" : "2016",
+              numeroCliente: pedido.cod_cli.substring(5, 10),
+              numeroPedidoDigitado: "",
+              numeroPrePedido: "",
+              observacao: `${pedido.cod_cli}/${pedido.final_atendimento.replace(/[-:.TZ]/g, "").substring(0, 12)}`,
+              observacaoCarregamento: "",
+              observacaoNF: "",
+              observacaoRecebimento: "",
+              organizacaoVendas: "",
+              pedidoAberto: false,
+              pedidoBloqueado: false,
+              pedidoHeishop: false,
+              pedidoRecolhimento: false,
+              pedidoTransmitido: true,
+              percDesconto: 0,
+              percTaxaFinanc: !!taxa ? taxa.taxa_adf : 0,
+              qtdSatelites: 0,
+              qtdeAvulsa: itensBase
+                .flat()
+                .reduce(
+                  (prev: number, curr: PedidoItensProps) =>
+                    prev + curr.qtdeAvulsa,
+                  0
+                ),
+              qtdeCaixa: itensBase
+                .flat()
+                .reduce(
+                  (prev: number, curr: PedidoItensProps) => prev + curr.qtdeCaixa,
+                  0
+                ),
               regiaoCliente: pedido.cod_cli.substring(0, 4),
-              tipoRecolhimento: "",
-              valorAcrescimoCapa: 0,
+              rota: "01",
+              statusControleERP: "",
+              statusPedidoHeishop: "",
+              tecnologiaUtiliz: "",
+              tipoEntrega: 0,
+              transmitidoFirebase: 3,
+              transmitirMobiltec: 1,
+              transmitirPortal: 2,
+              urlMobiltec: "http://portal.controlinformatica.com.br/PathTrackerAPI/API/v1/order",
+              urlPortal: "https://lippausdistribuicao.tamosjuntos.com.br/api/sfa/sinaliza",
               valorBonificado: 0,
-              valorBruto:
-                Number(produto.preco_item) * produto.qtde_unit +
-                Number(produto.preco_item) *
-                  Number(produto.qtde_prod) *
-                  produto.qtde_cx,
-              valorDescontoCapa: 0,
-              valorDescontoItem: 0,
+              valorBruto: itensBase
+                .flat()
+                .reduce(
+                  (prev: number, curr: PedidoItensProps) =>
+                    prev + curr.valorLiquidoFinal,
+                  0
+                ),
+              valorDesconto: 0,
+              valorFinal: itensBase
+                .flat()
+                .reduce(
+                  (prev: number, curr: PedidoItensProps) =>
+                    prev + curr.valorLiquidoFinal,
+                  0
+                ),
               valorImpostoBarreira: 0,
               valorIpi: 0,
-              valorLiquido:
-                Number(produto.preco_item) * produto.qtde_unit +
-                Number(produto.preco_item) *
-                  Number(produto.qtde_prod) *
-                  produto.qtde_cx,
-              valorLiquidoFinal:
-                Number(produto.preco_item) * produto.qtde_unit +
-                Number(produto.preco_item) *
-                  Number(produto.qtde_prod) *
-                  produto.qtde_cx,
-              valorLiquidoUmAvulso: Number(produto.preco_item.toFixed(6)),
-              valorLiquidoUmaCaixa:
-                Number(produto.preco_item) * produto.qtde_prod,
+              valorLiquido: itensBase
+                .flat()
+                .reduce(
+                  (prev: number, curr: PedidoItensProps) =>
+                    prev + curr.valorLiquidoFinal,
+                  0
+                ),
               valorVerba: 0,
+              valorVerbaGeradaGL: 0,
               valorVerbaUtilizadaGL: 0,
             };
-          });
-  
-          const pedidoBase: PedidoProps = {
-            bonusUtilizado: 0,
-            carga: new Date(pedido.final_atendimento)
-              .getMilliseconds()
-              .toString(),
-            // carga: '567',
-            chaveMobiltec: `${
-              pedido.vend_cli.toString()[0] == "3" ? "3601" : "2016"
-            }-${pedido.vend_cli.toString().padStart(8, "0")}-20221015175714620`,
-            // chaveMobiltec: "2016-00000111-20221015175714620",
-            codigoCliente: pedido.cod_cli.replace("-", ""), // string sem ' - '
-            // codigoCliente: "00019812", ^^
-            codigoCondicaoPagamento: !!pedido.cod_pag ? pedido.cod_pag.substring(2, 4) : null, // string
-            // codigoCondicaoPagamento: "77", ^^
-            codigoErpTerceiro: "",
-            codigoMotivoNaoCompra:
-              pedido.motivo_nao_compra == "Z" ? "S" : pedido.motivo_nao_compra,
-            codigoTipoCobranca: !!pedido.cod_pag ? pedido.cod_pag.substring(0, 1) : null,
-            codigoVendedor: pedido.vend_cli.toString().padStart(8, "0"), // string 8 length
-            // codigoVendedor: "00000111", ^^
-            coordGpsForaArea: false,
-            cpfCnpj: !!pedido.cpf_cnpj_cli
-              ? pedido.cpf_cnpj_cli.substring(2, 99)
-              : "41952551000999",
-  
-            // CLIENTE ^^^
-  
-            dataEmissao: new Date(new Date().toUTCString())
-              .toISOString()
-              .replace(/[-:.TZ]/g, "")
-              .substring(0, 14),
-            // dataEmissao: "20221017000000",
-            dataEntrega: !!pedido.data_entrega
-              ? pedido.data_entrega.replaceAll("-", "")
-              : null,
-            dataHoraUltimaEdicao: pedido.final_atendimento
-              .replace("T", " ")
-              .substring(0, 19),
-            // dataHoraUltimaEdicao: "2022-10-17 09:38:40",
-            desbloqueioGPSERP: false,
-            dia: getDay(new Date(pedido.final_atendimento)).toString(),
-            distanciaGPS: calcularRaio(pedido).toFixed(0),
-            // distanciaGPS: 11684, calcular distancia do vendedor até o cliente
-            duracaoPedido: differenceInSeconds(
-              new Date(pedido.final_atendimento),
-              new Date(pedido.inicio_atendimento)
-            ),
-            gpsLatitude: pedido.lat_vend.toString(),
-            // gpsLatitude: "-20.3321354",
-            gpsLongitude: pedido.long_vend.toString(),
-            // gpsLongitude: "-40.4011105",
-            horaFinalPedido: pedido.final_atendimento
-              .replace(/[-:.TZ]/g, "")
-              .substring(0, 14),
-            // horaFinalPedido: "20221017093837",
-            horaFinalPedidoTZ: "-03:00",
-            horaInicialPedido: pedido.inicio_atendimento
-              .replace(/[-:.TZ]/g, "")
-              .substring(0, 14),
-            // horaInicialPedido: "20221017093718",
-            horaInicialPedidoTZ: "-03:00",
-            imediato: false,
-            intervaloSincronismo: 0,
-  
-            itens: itensBase.flat(),
-  
-            licenca: pedido.vend_cli.toString()[0] == "3" ? "3601" : "2016",
-            numeroCliente: pedido.cod_cli.substring(5, 10),
-            numeroPedidoDigitado: "",
-            numeroPrePedido: "",
-            observacao: `${pedido.cod_cli}/${pedido.final_atendimento.replace(/[-:.TZ]/g, "").substring(0, 12)}`,
-            observacaoCarregamento: "",
-            observacaoNF: "",
-            observacaoRecebimento: "",
-            organizacaoVendas: "",
-            pedidoAberto: false,
-            pedidoBloqueado: false,
-            pedidoHeishop: false,
-            pedidoRecolhimento: false,
-            pedidoTransmitido: true,
-            percDesconto: 0,
-            percTaxaFinanc: !!taxa ? taxa.taxa_adf : 0,
-            qtdSatelites: 0,
-            qtdeAvulsa: itensBase
-              .flat()
-              .reduce(
-                (prev: number, curr: PedidoItensProps) =>
-                  prev + curr.qtdeAvulsa,
-                0
-              ),
-            qtdeCaixa: itensBase
-              .flat()
-              .reduce(
-                (prev: number, curr: PedidoItensProps) => prev + curr.qtdeCaixa,
-                0
-              ),
-            regiaoCliente: pedido.cod_cli.substring(0, 4),
-            rota: "01",
-            statusControleERP: "",
-            statusPedidoHeishop: "",
-            tecnologiaUtiliz: "",
-            tipoEntrega: 0,
-            transmitidoFirebase: 3,
-            transmitirMobiltec: 1,
-            transmitirPortal: 2,
-            urlMobiltec: "http://portal.controlinformatica.com.br/PathTrackerAPI/API/v1/order",
-            urlPortal: "https://lippausdistribuicao.tamosjuntos.com.br/api/sfa/sinaliza",
-            valorBonificado: 0,
-            valorBruto: itensBase
-              .flat()
-              .reduce(
-                (prev: number, curr: PedidoItensProps) =>
-                  prev + curr.valorLiquidoFinal,
-                0
-              ),
-            valorDesconto: 0,
-            valorFinal: itensBase
-              .flat()
-              .reduce(
-                (prev: number, curr: PedidoItensProps) =>
-                  prev + curr.valorLiquidoFinal,
-                0
-              ),
-            valorImpostoBarreira: 0,
-            valorIpi: 0,
-            valorLiquido: itensBase
-              .flat()
-              .reduce(
-                (prev: number, curr: PedidoItensProps) =>
-                  prev + curr.valorLiquidoFinal,
-                0
-              ),
-            valorVerba: 0,
-            valorVerbaGeradaGL: 0,
-            valorVerbaUtilizadaGL: 0,
-          };
-  
-          const fetch = await control.post("/sfa/sinaliza/pedido", pedidoBase);
-  
-          // console.log(fetch.data);
-  
-          promiseReturn.push({
-            frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
-            num_pedido: pedido.num_pedido,
-            boolean: fetch.data.pedidos[0].retornoTransmissaoWebService == "Pedido transmitido com sucesso",
-          });
-        }}
-         else {
+
+            const fetch = await control.post("/sfa/sinaliza/pedido", pedidoBase);
+
+            promiseReturn.push({
+              frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
+              num_pedido: pedido.num_pedido,
+              boolean: fetch.data.pedidos[0].retornoTransmissaoWebService == "Pedido transmitido com sucesso",
+            });  
+
+          }
+        }
+        else {
           console.log("entrega futura, só salva no banco e envia dps");
         }
       })
     );
   }
+
+  const somenteTrue = promiseReturn.filter((_) => _.boolean = true).map((_) => _.num_pedido)
+
+  const pedidosEnviados = pedidos.filter((each) => somenteTrue.includes(each.num_pedido))
+
+  const time = new Date().toISOString()
+
+  const csv = new ObjectsToCsv(pedidosEnviados)
+
+  await csv.toDisk(`/tmp/${time}.csv`);
+
+  await bot.telegram.sendDocument(chatId, {
+    filename: `pedidos_transmitidos_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
+    source: `/tmp/${time}.csv`
+  })
 
   const updatePedido = await prisma.pedidos_capa.updateMany({
     data: {
@@ -997,15 +1009,11 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
   if (promiseReturn.filter((each: any) => each.boolean == false).length > 0) {
     try {
-      const resposta = promiseReturn
-        .filter((each: any) => each.boolean == false)
-        .map((pedido) => {
+      const resposta = promiseReturn.filter((each: any) => each.boolean == false).map((pedido) => {
           return `  &#8226; ${pedido.num_pedido}, ${pedido.frase}\n`;
-        })
-        .join("\n");
+        }).join("\n");
 
-      await bot.telegram.sendMessage(
-        chatId,
+      await bot.telegram.sendMessage(chatId,
         `PEDIDOS NÃO ENVIADOS: \n\n${resposta}`,
         {
           parse_mode: "HTML",
@@ -1040,8 +1048,8 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
       await bot.telegram.sendMessage(chatId,
         `PEDIDOS AGENDADOS ENVIADOS: \n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\n`, {
-          parse_mode: "HTML",
-        }
+        parse_mode: "HTML",
+      }
       );
     } catch (err) {
       console.log(err);
