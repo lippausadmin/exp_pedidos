@@ -370,6 +370,145 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
   return { promiseReturn, pedido };
 }
 
+async function enviarMensagemBot(num_pedido: string, cod_cli: string, offline: boolean = false) {
+  const formatter = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const pedidos: any = await prisma.$queryRaw`
+    SELECT
+      p.vend_cli,
+      l.cod_vend IS NOT NULL AS especial,
+      trim(c.fantasia_cli) AS fantasia_cli,
+      c.pasta_cli,
+      trim(c.bairro_cli) AS bairro,
+      trim(c.cidade_cli) AS cidade,
+      c_v.desc_canal,
+      p.pedido_fora_rota,
+      p.num_pedido,
+      p.final_atendimento,
+      p.lat_cli,
+      p.long_cli,
+      p.lat_vend,
+      p.long_vend,
+      calculate_distance(
+        p.lat_cli,
+        p.long_cli,
+        p.lat_vend,
+        p.long_vend, 'M'):: int AS distancia,
+      calculate_distance(
+        p.lat_cli,
+        p.long_cli,
+        p.lat_vend,
+        p.long_vend, 'M'):: int < (
+          SELECT
+            r.raio_atendimento
+          FROM
+            parametros r
+        ) dentro,
+      (
+        SELECT
+          c.row_number:: int
+        FROM
+          (
+            SELECT
+              p.*
+            FROM
+              (
+                SELECT
+                  row_number() OVER (PARTITION BY p.cod_cli) AS row_number,
+                  p.motivo_nao_compra,
+                  p.cod_cli,
+                  p.final_atendimento,
+                  p.num_pedido
+                FROM
+                  pedidos_capa p
+                WHERE
+                  p.data_emissao = CURRENT_DATE
+                ORDER BY
+                  p.cod_cli ASC,
+                  p.final_atendimento DESC NULLS LAST,
+                  p.motivo_nao_compra DESC
+              ) as p
+            WHERE
+              p.cod_cli = ${cod_cli}
+            ORDER BY
+              p.cod_cli,
+              p.final_atendimento DESC NULLS LAST
+          ) as c
+        LIMIT 1
+      ) AS seq_pedido,
+      CASE
+        WHEN m.descricao_motivo IS NULL THEN 'VENDA'
+        ELSE m.descricao_motivo
+      END AS motivo,
+      (
+        SELECT
+          g.data_captura
+        FROM 
+          clientes_geo g
+        WHERE
+          g.cod_cli = ${cod_cli}
+      ) = CURRENT_DATE AS geo_hoje
+    FROM
+      (
+        SELECT
+          *
+        FROM 
+          pedidos_capa p
+        WHERE
+          p.num_pedido = ${num_pedido}
+      ) AS p
+    LEFT JOIN 
+      clientes_erp c ON p.cod_cli = c.cod_cli
+    LEFT JOIN 
+      motivo_nao_compra m ON p.motivo_nao_compra = m.cod_motivo
+    LEFT JOIN
+      canal_venda c_v ON c.cod_canal = c_v.cod_canal
+    LEFT JOIN
+      liberacao_vendedores l ON p.vend_cli = l.cod_vend
+  `
+
+  const itens: any = await prisma.$queryRaw`
+    SELECT
+      i.num_pedido,
+      CASE
+        WHEN p.descricao_curta_prod IS NULL THEN p.descricao_prod
+        ELSE p.descricao_curta_prod
+      END AS descricao,
+      i.qtde_cx AS cx,
+      i.qtde_unit AS un,
+      i.qtde_prod * i.preco_item AS valor,
+      (i.qtde_cx * i.qtde_prod + i.qtde_unit) * i.preco_item AS valor_total,
+      i.tab_preco_item,
+      p_c.descricao_tabela,
+      i.tabela_promocional = true OR i.venda_adicional = true AS especial
+    FROM
+      pedidos_itens i 
+    LEFT JOIN
+      produtos p ON i.cod_prod = p.cod_prod
+    LEFT JOIN
+      precos_capa p_c ON i.tab_preco_item = p_c.num_tabela
+    WHERE
+      i.num_pedido = ${num_pedido}
+  `
+
+  const mensagem = pedidos.map(({ vend_cli, especial, fantasia_cli, pasta_cli, bairro, cidade, desc_canal, pedido_fora_rota, num_pedido, final_atendimento, lat_cli, long_cli, lat_vend, long_vend, distancia, dentro, seq_pedido, motivo, geo_hoje }: any) => {
+
+    let _itens = itens.filter(({ num_pedido }: any) => num_pedido == num_pedido)
+
+    return `${!!offline ? '<b>—————  OFFLINE  —————</b>\n' : null}VENDEDOR: <b>${vend_cli}</b>       ${especial ? '⭐️' : ''}\nCLIENTE: <b>${fantasia_cli}</b>\nPASTA: <b>${pasta_cli}</b>\n<b>${bairro} | ${cidade}</b>\nCANAL: <b>${desc_canal}</b>\nFORA DE ROTA: <b>${pedido_fora_rota ? '✅' : '❌'}</b>\nPEDIDO: <b>${seq_pedido} | ${num_pedido}</b>\nDATA: <b>${new Date(final_atendimento).toLocaleDateString('pt-br')}</b>\nHORA: <b>${new Date(final_atendimento).toLocaleTimeString('pt-br')}</b>\nGEO CLIENTE: <b>${lat_cli}, ${long_cli}</b>\nGEO VENDEDOR: <b>${lat_vend}, ${long_vend}</b>\nDISTANCIA: <b>${distancia} ${dentro ? '✅' : '❌'}</b> <a href="https://www.google.com.br/maps/dir/${lat_vend},+${long_vend}/${lat_cli},${long_cli}">MAPA</a>\nGEO NOVA: <b>${geo_hoje ? '✅' : '❌'}</b>\n${motivo == 'VENDA' ? `VALOR TOTAL: <b>${formatter.format(_itens.reduce((a: number, b: any) => a + b.valor_total, 0))}</b> ${_itens.map(({ descricao, cx, un, valor, valor_total, tab_preco_item, descricao_tabela, especial }: any) => {
+      return `<pre> &#8226; ${padEnd(descricao, 20, ' ')} - CX: ${padStart(cx, 3)} UN: ${padStart(un, 3)} - ${formatter.format(valor)} - ${tab_preco_item} - ${descricao_tabela} ${especial ? ' - 🎯 ' : ''}</pre>`
+    }).join('\n')} ` : `MOTIVO: <b>${motivo} ❌</b>`}`
+  }).join('\n')
+
+  await bot.telegram.sendMessage(chatId, mensagem, { parse_mode: "HTML", disable_web_page_preview: true })
+
+}
+
 
 
                   // UTILS ^^^^^^^^^^^^^^^^^^^^    ROTAS DA API \/\/\/\/\/\/\/\/\/\/\/\/\/           
@@ -377,7 +516,6 @@ async function enviarPedido(pedido: EnviarPedidosProps | any, itens: any) {
 
 
 export async function prePedido(req: Request, res: Response) {
-  const chatId = process.env.CHAT_ID ? process.env.CHAT_ID : "";
 
   // FUNÇÃO PARA TRANSMITIR PEDIDOS DO EXP PARA O NOSSO DB
 
@@ -388,13 +526,6 @@ export async function prePedido(req: Request, res: Response) {
   const motivo_nao_compra = req.body.motivo_nao_compra;
 
   const cond_pag: CondPagProps = req.body.cond_pag;
-
-  const formatter = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
   let counter = 0;
 
@@ -492,77 +623,8 @@ export async function prePedido(req: Request, res: Response) {
 
   // OS DADOS SÃO ESCRITOS NO pedidos_capa E pedidos_itens AO MESMO TEMPO ^^
 
-  const momento_atual = new Date().toISOString().substring(11, 19);
-
-  const canal = await prisma.canal_venda.findFirst({
-    where: {
-      cod_canal: cliente.cod_canal
-    }
-  })
-
-  const produtos = await prisma.produtos.findMany({
-    select: {
-      cod_prod: true,
-      descricao_prod: true,
-      descricao_curta_prod: true
-    }
-  })
-
-  const tabela = await prisma.precos_capa.findMany({
-    select: {
-      num_tabela: true,
-      descricao_tabela: true
-    }
-  })
-
-  const cli = await prisma.clientes_erp.findFirst({
-    where: {
-      cod_cli: cliente.cod_cli
-    }
-  })
-
-  const n_pedido: any = await prisma.$queryRaw`
-    SELECT
-      p.num_pedido
-    FROM
-      pedidos_capa p
-    WHERE
-      p.data_emissao = CURRENT_DATE
-      AND p.cod_cli = '${pedido.cod_cli}'
-  `
-
-  const especial = await prisma.liberacao_vendedores.findFirst({
-    where: {
-      cod_vend: pedido.vend_cli
-    }
-  })
-
-  const parametros: any = await prisma.parametros.findMany()
-
-  const produtosAgrupado = groupBy(produtos, ({cod_prod}) => cod_prod)
-
-  const tabelaAgrupada   = groupBy(tabela, ({num_tabela}) => num_tabela)
-
   try {
-    if (pedido.motivo_nao_compra == "Z") {
-      await bot.telegram.sendMessage(
-        chatId, `VENDEDOR: <b>${pedido.vend_cli}               ${!!especial ? '⭐️' : ''}</b>\nCLIENTE: <b>${cli?.fantasia_cli.trim()}</b>\nPASTA: <b>${cli?.pasta_cli}</b>\n<b>${cli?.bairro_cli.trim()}</b>|<b>${cli?.cidade_cli.trim()}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nFORA DE ROTA: ${cliente.fora_rota ? '✅' : '❌'}\nPEDIDO:<b> ${n_pedido.length + 1} | ${pedido.num_pedido}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} , ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente, parametros[0].raio_atendimento)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nVALOR TOTAL: <b>${formatter.format(itens.flat().reduce((a, b) => a + b.valor_total_item, 0))}</b> ✅\n${itens.flatMap((item) => {
-          return `<pre> &#8226; ${produtosAgrupado[item.cod_prod][0].descricao_curta_prod !== null ? padEnd(produtosAgrupado[item.cod_prod][0].descricao_curta_prod?.toString().trim(), 20, ' ').toString() : padEnd(produtosAgrupado[item.cod_prod][0].descricao_prod.toString().trim(), 20, ' ').toString()} - CX: ${padStart(item.qtde_cx, 3)} UN: ${padStart(item.qtde_unit, 3)} - ${formatter.format(item.qtde_cx == 0 ? item.preco_item : item.qtde_prod * item.preco_item)} - ${item.tab_preco_item} - ${tabelaAgrupada[item.tab_preco_item][0].descricao_tabela}${item.venda_adicional || item.tabela_promocional ? ' - 🎯 ' : ''}</pre>`
-        }).join('\n')}`,
-        { parse_mode: "HTML", disable_web_page_preview: true }
-      );
-    }
-    else {
-      const motivo = await prisma.motivo_nao_compra.findFirst({
-        where: {
-          cod_motivo: !!pedido.motivo_nao_compra ? pedido.motivo_nao_compra : "",
-        },
-      });
-
-      await bot.telegram.sendMessage( chatId, `VENDEDOR: <b>${pedido.vend_cli}</b>\nCLIENTE: <b>${cli?.fantasia_cli}</b>\nPASTA: <b>${cli?.pasta_cli}</b>\n<b>${cli?.bairro_cli.trim()}</b>|<b>${cli?.cidade_cli.trim()}</b>\nCANAL: <b>${canal?.desc_canal}</b>\nFORA DE ROTA: ${cliente.fora_rota ? '✅' : '❌'}\nPEDIDO: <b>${pedido.num_pedido}</b>\nDATA: <b>${new Date(pedido.final_atendimento).toLocaleString("pt-br", { timeZone: 'America/Bahia' })}</b>\nGEO CLIENTE: <b>${cliente.lat_cli} , ${cliente.long_cli}</b>\nGEO VENDEDOR: <b>${cliente.lat_vend} / ${cliente.long_vend}</b>\nDISTANCIA: <b>${calcularRaioMensagem(cliente, parametros[0].raio_atendimento)}</b> <a href="https://www.google.com.br/maps/dir/${cliente.lat_vend},+${cliente.long_vend}/${cliente.lat_cli},${cliente.long_cli}">MAPA</a>\nMOTIVO: <b>${motivo?.descricao_motivo}</b> ❌\n`,
-        { parse_mode: "HTML", disable_web_page_preview: true }
-      );
-    }
+    await enviarMensagemBot(pedido.num_pedido, pedido.cod_cli, false)
   } 
   catch (err) {
     console.log(err);
@@ -649,6 +711,8 @@ export async function postPedidosOffline(req: Request, res: Response) {
       await enviarPedido(pedido, pedido.itens);
     })
   );
+
+
 
   return res.json("pedido");
 }
