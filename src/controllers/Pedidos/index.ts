@@ -984,6 +984,7 @@ export async function transmitirPedidos(req: Request, res: Response) {
               frase: fetch.data.pedidos[0].retornoTransmissaoWebService,
               num_pedido: pedido.num_pedido,
               boolean: fetch.data.pedidos[0].retornoTransmissaoWebService == "Pedido transmitido com sucesso",
+              vendedor: pedido.vend_cli
             });  
 
           }
@@ -1010,12 +1011,12 @@ export async function transmitirPedidos(req: Request, res: Response) {
   await csv_filial.toDisk(`/tmp/${time}_filial.csv`);
 
   await bot.telegram.sendDocument(chatId, {
-    filename: `pedidos_transmitidos_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
+    filename: `pedidos_transmitidos_matriz_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
     source: `/tmp/${time}_matriz.csv`
   })
 
   await bot.telegram.sendDocument(chatFilial, {
-    filename: `pedidos_transmitidos_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
+    filename: `pedidos_transmitidos_filial_${time.substring(0,10).split('-').reverse().join('-')}.csv`,
     source: `/tmp/${time}_filial.csv`
   })
 
@@ -1033,16 +1034,32 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
   if (promiseReturn.filter((each: any) => each.boolean == false).length > 0) {
     try {
-      const resposta = promiseReturn.filter((each: any) => each.boolean == false).map((pedido) => {
-          return `  &#8226; ${pedido.num_pedido}, ${pedido.frase}\n`;
-        }).join("\n");
 
-      await bot.telegram.sendMessage(chatId,
-        `PEDIDOS NÃO ENVIADOS: \n\n${resposta}`,
-        {
-          parse_mode: "HTML",
-        }
-      );
+      const returnMatriz = promiseReturn.filter(({vendedor, boolean}) => vendedor < 300 && boolean == true)
+
+      const returnFilial = promiseReturn.filter(({vendedor, boolean}) => vendedor > 300 && boolean == true)
+
+      const respostaMatriz = returnMatriz.map((pedido) => {
+        return `  &#8226; ${pedido.num_pedido}, ${pedido.frase}\n`;
+      }).join("\n");
+
+      const respostaFilial = returnFilial.map((pedido) => {
+        return `  &#8226; ${pedido.num_pedido}, ${pedido.frase}\n`;
+      }).join("\n");
+
+      await bot.telegram.sendMessage(chatId, 
+        `PEDIDOS NÃO ENVIADOS: \n\n${respostaMatriz}`, { 
+        parse_mode: "HTML" 
+      });
+
+      await bot.telegram.sendMessage(chatFilial, 
+        `PEDIDOS NÃO ENVIADOS: \n\n${respostaFilial}`, { 
+        parse_mode: "HTML" 
+      });
+
+
+
+      // \/\/\/       ATUALIZAR PEDIDOS QUE DERAM RETORNO JÁ TRANSMITIDO       \/\/\/
 
       // await prisma.pedidos_capa.updateMany({
       //   data: {
@@ -1055,8 +1072,6 @@ export async function transmitirPedidos(req: Request, res: Response) {
       //   }
       // })
 
-      // ^^^^ ATUALIZAR PEDIDOS QUE DERAM RETORNO JÁ TRANSMITIDO
-
     } catch (err) {
       console.log(err);
     }
@@ -1066,22 +1081,37 @@ export async function transmitirPedidos(req: Request, res: Response) {
 
   if (promiseReturn.filter((each: any) => each.boolean == true).length > 0) {
     try {
-      const resposta = promiseReturn.filter((each: any) => each.boolean == true).map((pedido) => {
+
+      const returnMatriz = promiseReturn.filter(({vendedor, boolean}) => vendedor < 300 && boolean == true)
+
+      const returnFilial = promiseReturn.filter(({vendedor, boolean}) => vendedor > 300 && boolean == true)
+
+      const respostaMatriz = returnMatriz.map((pedido) => {
+        return `  &#8226; ${pedido.num_pedido}`;
+      }).join("\n");
+
+      const respostaFilial = returnFilial.map((pedido) => {
         return `  &#8226; ${pedido.num_pedido}`;
       }).join("\n");
 
       await bot.telegram.sendMessage(chatId,
-        `PEDIDOS AGENDADOS ENVIADOS: \n${resposta}\nTOTAL: ${promiseReturn.filter((each: any) => each.boolean == true).length}\n`, {
+        `PEDIDOS AGENDADOS ENVIADOS: \n${respostaMatriz}\nTOTAL: ${returnMatriz.length}\n`, {
         parse_mode: "HTML",
-      }
-      );
+      });
+
+      await bot.telegram.sendMessage(chatFilial,
+        `PEDIDOS AGENDADOS ENVIADOS: \n${respostaFilial}\nTOTAL: ${returnFilial.length}\n`, {
+        parse_mode: "HTML",
+      });
     } catch (err) {
       console.log(err);
     }
   }
 
   return res.status(200).json({
-    pedidos_enviados: promiseReturn.filter((each: any) => each.boolean == true).length,
-    pedidos_travados: promiseReturn.filter((each: any) => each.boolean == false).length,
+    pedidos_enviados_matriz: promiseReturn.filter(({vendedor, boolean}) => boolean == true && vendedor < 300).length,
+    pedidos_travados_matriz: promiseReturn.filter(({vendedor, boolean}) => boolean == false && vendedor < 300).length,
+    pedidos_enviados_filial: promiseReturn.filter(({vendedor, boolean}) => boolean == true && vendedor > 300).length,
+    pedidos_travados_filial: promiseReturn.filter(({vendedor, boolean}) => boolean == false && vendedor > 300).length,
   });
 }
